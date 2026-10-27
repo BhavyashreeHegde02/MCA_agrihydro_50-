@@ -1,0 +1,137 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Install Node.js LTS",
+			"type": "shell",
+			"command": "winget",
+			"args": [
+				"install",
+				"--id",
+				"OpenJS.NodeJS.LTS",
+				"--exact",
+				"--silent",
+				"--accept-package-agreements",
+				"--accept-source-agreements"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Install Node LTS and run Jalachakra",
+			"type": "shell",
+			"command": "& { $ErrorActionPreference = 'Stop'; $version = 'v24.22.1'; $archiveName = \"node-$version-win-x64.zip\"; $url = \"https://nodejs.org/dist/latest-v24.x/$archiveName\"; $expectedHash = 'd2046d28c2c3dcd211ac5145c0bf30e2047ef9dfb306693c8c6e2eccd8b95fa5'; $archive = Join-Path $env:TEMP $archiveName; $installRoot = Join-Path $env:LOCALAPPDATA 'Programs\\node-v24.22.1'; New-Item -ItemType Directory -Force -Path $installRoot | Out-Null; Invoke-WebRequest -Uri $url -OutFile $archive; $actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash.ToLowerInvariant(); if ($actualHash -ne $expectedHash) { throw \"Node archive checksum mismatch: $actualHash\" }; Expand-Archive -LiteralPath $archive -DestinationPath $installRoot -Force; Remove-Item -LiteralPath $archive -Force; $nodeDir = Join-Path $installRoot \"node-$version-win-x64\"; if (-not (Test-Path (Join-Path $nodeDir 'node.exe')) -or -not (Test-Path (Join-Path $nodeDir 'npm.cmd'))) { throw 'Node archive extracted but node.exe or npm.cmd is missing.' }; $env:PATH = \"$nodeDir;$env:PATH\"; Write-Output (& (Join-Path $nodeDir 'node.exe') --version); Write-Output (& (Join-Path $nodeDir 'npm.cmd') --version); & .\\start-dev.ps1 }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Install verified Node and start app",
+			"type": "shell",
+			"command": "& { $ErrorActionPreference = 'Stop'; $version = 'v24.22.1'; $archiveName = ('node-' + $version + '-win-x64.zip'); $url = ('https://nodejs.org/dist/latest-v24.x/' + $archiveName); $expectedHash = 'd2046d28c2c3dcd211ac5145c0bf30e2047ef9dfb306693c8c6e2eccd8b95fa5'; $archive = Join-Path $env:TEMP $archiveName; $installRoot = Join-Path $env:LOCALAPPDATA 'Programs\\node-v24.22.1'; New-Item -ItemType Directory -Force -Path $installRoot | Out-Null; Invoke-WebRequest -Uri $url -OutFile $archive; $actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash.ToLowerInvariant(); if ($actualHash -ne $expectedHash) { throw ('Node archive checksum mismatch: ' + $actualHash) }; Expand-Archive -LiteralPath $archive -DestinationPath $installRoot -Force; Remove-Item -LiteralPath $archive -Force; $nodeDir = Join-Path $installRoot 'node-v24.22.1-win-x64'; if (-not (Test-Path (Join-Path $nodeDir 'node.exe')) -or -not (Test-Path (Join-Path $nodeDir 'npm.cmd'))) { throw 'Node archive extracted but node.exe or npm.cmd is missing.' }; $env:PATH = ($nodeDir + ';' + $env:PATH); Write-Output (& (Join-Path $nodeDir 'node.exe') --version); Write-Output (& (Join-Path $nodeDir 'npm.cmd') --version); & .\\start-dev.ps1 }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Diagnose backend startup",
+			"type": "shell",
+			"command": "Write-Output 'Backend health:'; try { Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 5 | ConvertTo-Json -Compress } catch { Write-Output $_.Exception.Message }; Write-Output 'Port 8000 listeners:'; Get-NetTCPConnection -State Listen -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,OwningProcess | Format-Table -AutoSize; Write-Output 'Python processes:'; Get-CimInstance Win32_Process -Filter \"Name = 'python.exe'\" | Select-Object ProcessId,CommandLine | Format-List",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Start Jalachakra backend",
+			"type": "shell",
+			"command": ".\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"uvicorn",
+				"app.main:app",
+				"--app-dir",
+				"backend",
+				"--host",
+				"127.0.0.1",
+				"--port",
+				"8000"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Repair backend NumPy installation",
+			"type": "shell",
+			"command": ".\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pip",
+				"install",
+				"--force-reinstall",
+				"--no-deps",
+				"numpy==2.5.3"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Run Jalachakra development servers",
+			"type": "shell",
+			"command": "$env:PATH = ((Join-Path $env:LOCALAPPDATA 'Programs\\node-v24.22.1\\node-v24.22.1-win-x64') + ';' + $env:PATH); & .\\start-dev.ps1",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Capture backend startup log",
+			"type": "shell",
+			"command": "$out = Join-Path $env:TEMP 'jalachakra-backend-out.log'; $err = Join-Path $env:TEMP 'jalachakra-backend-err.log'; $proc = Start-Process -FilePath '.\\.venv\\Scripts\\python.exe' -ArgumentList @('-m','uvicorn','app.main:app','--app-dir','backend','--host','127.0.0.1','--port','8000') -WorkingDirectory (Get-Location).Path -RedirectStandardOutput $out -RedirectStandardError $err -PassThru; Start-Sleep -Seconds 10; if (Get-Process -Id $proc.Id -ErrorAction SilentlyContinue) { Write-Output ('Backend process still running, PID ' + $proc.Id) } else { Write-Output 'Backend process exited during startup.' }; Write-Output '--- stderr ---'; if (Test-Path $err) { Get-Content -LiteralPath $err }; Write-Output '--- stdout ---'; if (Test-Path $out) { Get-Content -LiteralPath $out }; try { Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 3 | ConvertTo-Json -Compress } catch { Write-Output ('Health probe: ' + $_.Exception.Message) }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Repair backend SciPy installation",
+			"type": "shell",
+			"command": ".\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pip",
+				"install",
+				"--force-reinstall",
+				"--no-deps",
+				"scipy==1.18.1"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Check backend health response",
+			"type": "shell",
+			"command": "Write-Output 'Listeners:'; Get-NetTCPConnection -State Listen -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,OwningProcess | Format-Table -AutoSize; foreach ($path in @('/','/health','/docs')) { try { $response = Invoke-WebRequest -Uri ('http://127.0.0.1:8000' + $path) -TimeoutSec 30 -UseBasicParsing; Write-Output ($path + ' status=' + $response.StatusCode + ' body=' + $response.Content.Substring(0,[Math]::Min(500,$response.Content.Length))) } catch { Write-Output ($path + ' error=' + $_.Exception.Message) } }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Start Jalachakra frontend",
+			"type": "shell",
+			"command": "$env:PATH = ((Join-Path $env:LOCALAPPDATA 'Programs\\node-v24.22.1\\node-v24.22.1-win-x64') + ';' + $env:PATH); Set-Location .\\frontend; & npm.cmd run dev -- --hostname 127.0.0.1 --port 3000",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Verify Jalachakra services",
+			"type": "shell",
+			"command": "foreach ($url in @('http://127.0.0.1:8000/health','http://127.0.0.1:3000')) { try { $response = Invoke-WebRequest -Uri $url -TimeoutSec 30 -UseBasicParsing; Write-Output ($url + ' => HTTP ' + $response.StatusCode); if ($url.EndsWith('/health')) { Write-Output $response.Content } elseif ($response.Content -notmatch 'JALACHAKRA') { throw 'Frontend response did not contain the expected app marker.' } } catch { Write-Error ($url + ' failed: ' + $_.Exception.Message); exit 1 } }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

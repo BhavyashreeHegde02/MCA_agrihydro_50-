@@ -1,0 +1,58 @@
+{
+  "target_name": "etc_mm_day",
+  "target_unit": "mm/day",
+  "target_provenance": "reference_derived; not field-observed CWR",
+  "forecast_horizon_days": 1,
+  "xgboost_comparison_note": "Existing XGBoost metrics use a same-day task and are not directly comparable to this one-day-ahead experiment.",
+  "partitions": {
+    "train": {
+      "mae_mm_day": 0.07907114198029806,
+      "rmse_mm_day": 0.14098293979629634,
+      "r2": 0.9969015501292863,
+      "mean_residual_mm_day": -0.0015250493376368149,
+      "median_absolute_error_mm_day": 0.03508272968255177,
+      "bias_predicted_minus_actual_mm_day": 0.0015250493376368149
+    },
+    "validation": {
+      "mae_mm_day": 0.5017093055395997,
+      "rmse_mm_day": 0.6990161840171758,
+      "r2": 0.929895355025512,
+      "mean_residual_mm_day": 0.07815088942284096,
+      "median_absolute_error_mm_day": 0.35530485267025247,
+      "bias_predicted_minus_actual_mm_day": -0.07815088942284096
+    },
+    "test": {
+      "mae_mm_day": 0.507188378809666,
+      "rmse_mm_day": 0.700777599581201,
+      "r2": 0.91072565184557,
+      "mean_residual_mm_day": 0.03066934903067609,
+      "median_absolute_error_mm_day": 0.361223223332791,
+      "bias_predicted_minus_actual_mm_day": -0.03066934903067609
+    }
+  },
+  "comparison": [
+    {
+      "Model": "Random Forest",
+      "MAE": 0.507188378809666,
+      "RMSE": 0.700777599581201,
+      "R\u00b2": 0.91072565184557
+    },
+    {
+      "Model": "Existing XGBoost (same-day; not comparable)",
+      "MAE": 0.3623,
+      "RMSE": 0.5001,
+      "R\u00b2": 0.9546
+    },
+    {
+      "Model": "Proposed physics-guided growth-stage-aware XGBoost",
+      "MAE": null,
+      "RMSE": null,
+      "R\u00b2": null
+    }
+  ],
+  "test_error_analysis": {
+    "mean_residual_mm_day": 0.03066934903067609,
+    "median_absolute_error_mm_day": 0.361223223332791,
+    "bias_predicted_minus_actual_mm_day": -0.03066934903067609
+  }
+}

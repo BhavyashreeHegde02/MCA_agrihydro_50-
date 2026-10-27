@@ -1,0 +1,38 @@
+{
+  "run_timestamp": "2026-09-18T17:37:31Z",
+  "random_seed": 20260918,
+  "rolling_windows": [
+    7,
+    30
+  ],
+  "latitude_used_for_radiation_imputation_deg": 23.7,
+  "rows": {
+    "weather": 2557,
+    "soil": 875,
+    "district_rainfall": 29,
+    "crop_suitability": 2200,
+    "season_context": 3158
+  },
+  "weather_date_range": [
+    "2018-01-01",
+    "2024-12-31"
+  ],
+  "validation": {
+    "checks_run": 35,
+    "passed": 35,
+    "errors": 0,
+    "warnings": 0
+  },
+  "imputations": [
+    {
+      "column": "allsky_sfc_sw_dwn",
+      "method": "fao56_temperature_range",
+      "n_filled": 1,
+      "filled_values": [
+        15.5152
+      ],
+      "justification": "FAO-56 equation 50 estimates shortwave radiation from the daily temperature range when measured radiation is unavailable. It is preferred over interpolation here because it uses same-day observations rather than borrowing from adjacent days, and because it is the substitution FAO-56 itself prescribes."
+    }
+  ],
+  "feature_count": 28
+}

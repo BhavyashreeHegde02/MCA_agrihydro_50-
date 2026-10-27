@@ -1,0 +1,420 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * JALACHAKRA Agricultural Design System Tokens
+ * Light, sunlit, warm, farmer-friendly visual language.
+ *
+ * Palette:
+ * - Primary Green: #2E7D32
+ * - Secondary Green: #66BB6A
+ * - Fresh Green: #A5D6A7
+ * - Soft Mint: #E8F5E9
+ * - Cream: #FFFDF5
+ * - Warm Background: #F6F8EE
+ * - Earth/Soil: #8D6E63
+ * - Water Accent: #4FC3F7 & #0288D1
+ *
+ * Strict constraint: LIGHT agricultural theme. No black background or dark dashboard.
+ */
+
+@custom-variant dark (&:where(.dark, [data-theme="dark"], .dark *, [data-theme="dark"] *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@theme {
+  --color-primary-green: #2e7d32;
+  --color-secondary-green: #66bb6a;
+  --color-fresh-green: #a5d6a7;
+  --color-soft-mint: #e8f5e9;
+  --color-cream: #fffdf5;
+  --color-warm-bg: #f6f8ee;
+  --color-earth: #8d6e63;
+  --color-earth-dark: #6d4c41;
+  --color-water-accent: #0288d1;
+  --color-water-light: #4fc3f7;
+  --color-water-subtle: #e0f2fe;
+
+  /* Water shades */
+  --color-water-50: #f0f9ff;
+  --color-water-100: #e0f2fe;
+  --color-water-200: #bae6fd;
+  --color-water-300: #7dd3fc;
+  --color-water-400: #38bdf8;
+  --color-water-500: #0288d1;
+  --color-water-600: #0369a1;
+  --color-water-700: #075985;
+  --color-water-800: #0c4a6e;
+  --color-water-900: #082f49;
+
+  /* Crop shades */
+  --color-crop-100: #e8f5e9;
+  --color-crop-200: #c8e6c9;
+  --color-crop-300: #a5d6a7;
+  --color-crop-400: #81c784;
+  --color-crop-500: #66bb6a;
+  --color-crop-600: #2e7d32;
+  --color-crop-700: #1b5e20;
+  --color-crop-800: #144618;
+
+  /* Soil shades */
+  --color-soil-100: #efebe9;
+  --color-soil-200: #d7ccc8;
+  --color-soil-300: #bcaaa4;
+  --color-soil-400: #a1887f;
+  --color-soil-500: #8d6e63;
+  --color-soil-600: #6d4c41;
+  --color-soil-700: #4e342e;
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Surfaces: Warm cream and crisp white */
+  --background: #f6f8ee;
+  --foreground: #1b3820;
+  --card: #ffffff;
+  --card-foreground: #1b3820;
+  --popover: #fffdf5;
+  --popover-foreground: #1b3820;
+
+  /* Brand Primary: Natural Karnataka agricultural green */
+  --primary: #2e7d32;
+  --primary-foreground: #ffffff;
+
+  /* Secondary: Soft mint */
+  --secondary: #e8f5e9;
+  --secondary-foreground: #1b5e20;
+  --muted: #edf3e4;
+  --muted-foreground: #4a6752;
+
+  --accent: #e8f5e9;
+  --accent-foreground: #2e7d32;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #dde5ce;
+  --border-strong: #bacca7;
+  --input: #cad5bd;
+  --ring: #2e7d32;
+
+  /* Domain Semantics */
+  --ok: #2e7d32;
+  --ok-surface: #e8f5e9;
+  --warn: #d97706;
+  --warn-surface: #fef3c7;
+  --danger: #dc2626;
+  --danger-surface: #fee2e2;
+  --info-surface: #e0f2fe;
+
+  --surface-sunken: #eef4e5;
+
+  /* Chart Colors */
+  --chart-1: #0288d1; /* water demand */
+  --chart-2: #2e7d32; /* crop / rainfall */
+  --chart-3: #8d6e63; /* soil / irrigation */
+  --chart-4: #7c3aed; /* reference / scientific */
+  --chart-5: #dc2626; /* deficit */
+
+  /* Sidebar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1b3820;
+  --sidebar-primary: #2e7d32;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f5e9;
+  --sidebar-accent-foreground: #2e7d32;
+  --sidebar-border: #dde5ce;
+  --sidebar-ring: #2e7d32;
+}
+
+/*
+ * Keep warm, friendly agricultural atmosphere across devices.
+ * No black backgrounds or dark dashboard.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) {
+    --background: #f6f8ee;
+    --foreground: #1b3820;
+    --card: #ffffff;
+    --card-foreground: #1b3820;
+    --popover: #fffdf5;
+    --popover-foreground: #1b3820;
+    --primary: #2e7d32;
+    --primary-foreground: #ffffff;
+    --secondary: #e8f5e9;
+    --secondary-foreground: #1b5e20;
+    --muted: #edf3e4;
+    --muted-foreground: #4a6752;
+    --accent: #e8f5e9;
+    --accent-foreground: #2e7d32;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+    --border: #dde5ce;
+    --border-strong: #bacca7;
+    --input: #cad5bd;
+    --ring: #2e7d32;
+    --surface-sunken: #eef4e5;
+    --sidebar: #ffffff;
+    --sidebar-foreground: #1b3820;
+    --sidebar-primary: #2e7d32;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #e8f5e9;
+    --sidebar-accent-foreground: #2e7d32;
+    --sidebar-border: #dde5ce;
+    --sidebar-ring: #2e7d32;
+  }
+}
+
+.dark,
+:root[data-theme="dark"] {
+  --background: #f6f8ee;
+  --foreground: #1b3820;
+  --card: #ffffff;
+  --card-foreground: #1b3820;
+  --popover: #fffdf5;
+  --popover-foreground: #1b3820;
+  --primary: #2e7d32;
+  --primary-foreground: #ffffff;
+  --secondary: #e8f5e9;
+  --secondary-foreground: #1b5e20;
+  --muted: #edf3e4;
+  --muted-foreground: #4a6752;
+  --accent: #e8f5e9;
+  --accent-foreground: #2e7d32;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #dde5ce;
+  --border-strong: #bacca7;
+  --input: #cad5bd;
+  --ring: #2e7d32;
+  --surface-sunken: #eef4e5;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1b3820;
+  --sidebar-primary: #2e7d32;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f5e9;
+  --sidebar-accent-foreground: #2e7d32;
+  --sidebar-border: #dde5ce;
+  --sidebar-ring: #2e7d32;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    background-color: var(--background);
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+ * Agricultural & Hydrological Visual Utilities
+ * -------------------------------------------------------------------------- */
+.bg-agro-gradient {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 50%, #fffdf5 100%);
+}
+
+.bg-agro-sunlit {
+  background: radial-gradient(circle at 10% 10%, rgba(254, 243, 199, 0.45) 0%, transparent 40%),
+              radial-gradient(circle at 90% 90%, rgba(232, 245, 233, 0.6) 0%, transparent 50%),
+              #f6f8ee;
+}
+
+.bg-water-card {
+  background: linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.bg-leaf-pattern {
+  background-image: radial-gradient(circle at 10% 20%, rgba(46, 125, 50, 0.05) 0%, transparent 25%),
+                    radial-gradient(circle at 90% 80%, rgba(2, 136, 209, 0.05) 0%, transparent 25%);
+}
+
+.card-agro {
+  background-color: #ffffff;
+  border: 1px solid #dde5ce;
+  box-shadow: 0 4px 16px -2px rgba(46, 125, 50, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+.card-agro:hover {
+  border-color: #a5d6a7;
+  box-shadow: 0 8px 24px -4px rgba(46, 125, 50, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* --------------------------------------------------------------------------
+ * Keyframe Animations for Living Farm Scene & Micro-interactions
+ * -------------------------------------------------------------------------- */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes cropSway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(2deg) skewX(1deg); }
+}
+
+.animate-crop-sway {
+  transform-origin: bottom center;
+  animation: cropSway 4.5s ease-in-out infinite;
+}
+
+@keyframes cloudDrift {
+  0% { transform: translateX(-3%); }
+  50% { transform: translateX(3%); }
+  100% { transform: translateX(-3%); }
+}
+
+.animate-cloud-drift {
+  animation: cloudDrift 16s ease-in-out infinite;
+}
+
+@keyframes sunPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.4));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 18px rgba(251, 191, 36, 0.7));
+  }
+}
+
+.animate-sun-pulse {
+  animation: sunPulse 6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes waterFlow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -40; }
+}
+
+.animate-water-flow {
+  stroke-dasharray: 8 6;
+  animation: waterFlow 2.8s linear infinite;
+}
+
+@keyframes waterPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(2, 136, 209, 0.3);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 8px rgba(2, 136, 209, 0);
+  }
+}
+
+.animate-water-pulse {
+  animation: waterPulse 3s ease-in-out infinite;
+}
+
+@keyframes gentleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-gentle-float {
+  animation: gentleFloat 4s ease-in-out infinite;
+}
+
+@keyframes particleFloat {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.35; }
+  50% { transform: translateY(-12px) translateX(6px); opacity: 0.85; }
+}
+
+.animate-particle-float {
+  animation: particleFloat 5s ease-in-out infinite;
+}
+
+@keyframes ripplePulse {
+  0% { transform: scale(0.95); opacity: 0.9; }
+  50% { transform: scale(1.06); opacity: 0.4; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+
+.animate-ripple-pulse {
+  animation: ripplePulse 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+
+/* Accessibility: respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-marquee {
+    animation: none;
+    transform: none;
+  }
+}

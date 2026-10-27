@@ -1,0 +1,296 @@
+{
+  "model_name": "surrogate",
+  "version": "v1",
+  "saved_at": "2026-09-18T17:59:44Z",
+  "random_seed": 20260918,
+  "algorithm": "XGBRegressor",
+  "model_family": "boosted trees",
+  "selection_rationale": "Included only where its extra complexity earns a measurable improvement over gradient boosting.",
+  "task": {
+    "task": "surrogate",
+    "target": "etc_mm_day",
+    "horizon_days": 0,
+    "n_features": 13,
+    "numerical_features": [
+      "t2m",
+      "t2m_min",
+      "t2m_max",
+      "rh2m",
+      "ws2m",
+      "allsky_sfc_sw_dwn",
+      "temp_range_c",
+      "day_of_year",
+      "doy_sin",
+      "doy_cos",
+      "days_after_sowing"
+    ],
+    "categorical_features": [
+      "crop",
+      "growth_stage"
+    ],
+    "purpose": "Give the model every input FAO-56 uses and confirm it can recover the reference. A wiring check on the feature pipeline, the target construction and the training loop.",
+    "reporting_note": "DIAGNOSTIC ONLY. Near-perfect scores are expected because the target is a deterministic function of these inputs. This is function approximation, not predictive skill, and must never be quoted as model accuracy."
+  },
+  "target_definition": {
+    "name": "etc_mm_day",
+    "unit": "mm/day",
+    "definition": "ETc = ET0 x Kc",
+    "et0_method": "FAO-56 Penman-Monteith (Allen et al. 1998, eq. 6)",
+    "kc_source": "growth-stage curve built from the project's agronomic reference files; see config/crop_stages.yaml",
+    "provenance_class": "reference_derived",
+    "is_field_observed": false,
+    "statement": "This target is derived from a physics reference applied to a real weather series. It is NOT an observed field measurement of water use. Any model trained on it learns and refines a reference-derived quantity, and results must be reported in those terms.",
+    "why_not_the_supplied_column": "crop_water_data.csv -> water_requirement_liters was tested and rejected: the stated volumes imply irrigation depths about a hundred times smaller than the lightest real application, its evapotranspiration column is uncorrelated with all of its physical drivers simultaneously, all nine numeric columns are indistinguishable from uniform draws, and a log-linear model recovers 90 percent of its variance as a clipped multiplicative formula. See docs/dataset_analysis.md section 5.",
+    "n_records": 158118,
+    "mean": 4.5353,
+    "std": 2.5287,
+    "min": 0.34,
+    "max": 13.9567
+  },
+  "feature_order": [
+    "t2m",
+    "t2m_min",
+    "t2m_max",
+    "rh2m",
+    "ws2m",
+    "allsky_sfc_sw_dwn",
+    "temp_range_c",
+    "day_of_year",
+    "doy_sin",
+    "doy_cos",
+    "days_after_sowing",
+    "crop",
+    "growth_stage"
+  ],
+  "numerical_features": [
+    "t2m",
+    "t2m_min",
+    "t2m_max",
+    "rh2m",
+    "ws2m",
+    "allsky_sfc_sw_dwn",
+    "temp_range_c",
+    "day_of_year",
+    "doy_sin",
+    "doy_cos",
+    "days_after_sowing"
+  ],
+  "categorical_features": [
+    "crop",
+    "growth_stage"
+  ],
+  "split": {
+    "strategy": "chronological, split on the observation date",
+    "rationale": "Weather is autocorrelated and crop cohorts overlap in time, so a random split would place adjacent days either side of the boundary and inflate every metric.",
+    "train_rows": 94889,
+    "calibration_rows": 31669,
+    "test_rows": 31560,
+    "train_end": "2022-02-25",
+    "calibration_end": "2023-06-27",
+    "test_end": "2024-12-29"
+  },
+  "metrics": {
+    "train": {
+      "mae_mm_day": 0.0657,
+      "rmse_mm_day": 0.0929,
+      "r2": 0.9987,
+      "nse": 0.9987,
+      "mape_pct": 1.84,
+      "mape_coverage_pct": 100.0,
+      "bias_mm_day": 0.0,
+      "n": 94889
+    },
+    "calibration": {
+      "mae_mm_day": 0.1366,
+      "rmse_mm_day": 0.1998,
+      "r2": 0.9943,
+      "nse": 0.9943,
+      "mape_pct": 3.117,
+      "mape_coverage_pct": 100.0,
+      "bias_mm_day": 0.0015,
+      "n": 31669
+    },
+    "test": {
+      "mae_mm_day": 0.1407,
+      "rmse_mm_day": 0.2041,
+      "r2": 0.9924,
+      "nse": 0.9924,
+      "mape_pct": 3.585,
+      "mape_coverage_pct": 99.9,
+      "bias_mm_day": 0.0053,
+      "n": 31560
+    }
+  },
+  "interval": {
+    "method": "split conformal, absolute residual",
+    "nominal_coverage": 0.9,
+    "half_width_mm_day": 0.3055,
+    "n_calibration": 31669,
+    "residual_quantile": 0.9,
+    "empirical_coverage": 0.8937,
+    "coverage_gap": -0.0063,
+    "mean_interval_width_mm_day": 0.6109,
+    "median_interval_width_mm_day": 0.6109,
+    "n": 31560
+  },
+  "model_comparison": [
+    {
+      "model": "xgboost",
+      "mae_mm_day": 0.1407,
+      "rmse_mm_day": 0.2041,
+      "r2": 0.9924,
+      "nse": 0.9924,
+      "mape_pct": 3.585,
+      "mape_coverage_pct": 99.9,
+      "bias_mm_day": 0.0053,
+      "n": 31560,
+      "family": "boosted trees",
+      "empirical_coverage": 0.8937,
+      "interval_width_mm_day": 0.6109
+    },
+    {
+      "model": "gradient_boosting",
+      "mae_mm_day": 0.2146,
+      "rmse_mm_day": 0.3048,
+      "r2": 0.9831,
+      "nse": 0.9831,
+      "mape_pct": 5.742,
+      "mape_coverage_pct": 99.9,
+      "bias_mm_day": 0.0128,
+      "n": 31560,
+      "family": "boosted trees",
+      "empirical_coverage": 0.9058,
+      "interval_width_mm_day": 0.9526
+    },
+    {
+      "model": "random_forest",
+      "mae_mm_day": 0.2288,
+      "rmse_mm_day": 0.3367,
+      "r2": 0.9794,
+      "nse": 0.9794,
+      "mape_pct": 5.776,
+      "mape_coverage_pct": 99.9,
+      "bias_mm_day": -0.0017,
+      "n": 31560,
+      "family": "tree ensemble",
+      "empirical_coverage": 0.8938,
+      "interval_width_mm_day": 1.0351
+    },
+    {
+      "model": "ridge",
+      "mae_mm_day": 0.815,
+      "rmse_mm_day": 1.0596,
+      "r2": 0.7963,
+      "nse": 0.7963,
+      "mape_pct": 24.476,
+      "mape_coverage_pct": 99.9,
+      "bias_mm_day": 0.0585,
+      "n": 31560,
+      "family": "linear",
+      "empirical_coverage": 0.9316,
+      "interval_width_mm_day": 3.8456
+    },
+    {
+      "model": "dummy_mean",
+      "mae_mm_day": 1.8128,
+      "rmse_mm_day": 2.3507,
+      "r2": -0.0027,
+      "nse": -0.0027,
+      "mape_pct": 62.029,
+      "mape_coverage_pct": 99.9,
+      "bias_mm_day": 0.1213,
+      "n": 31560,
+      "family": "baseline",
+      "empirical_coverage": 0.9435,
+      "interval_width_mm_day": 9.067
+    }
+  ],
+  "dataset_fingerprint": "bb171ae4a031c240",
+  "baseline_assumptions": {
+    "generated_at": "2026-09-18T17:48:09Z",
+    "random_seed": 20260918,
+    "site": {
+      "latitude_deg": 23.7,
+      "longitude_deg": null,
+      "elevation_m": 300.0,
+      "resolution_status": "inferred_from_data",
+      "is_provisional": true,
+      "provenance": "Latitude was ESTIMATED from the project's own radiation series, not taken from any document and not assumed. Method: on rain-free dry-season days (November-May) the clearest skies should produce a clearness index Rs / Ra(latitude, day-of-year) that is constant through the year. Latitude was scanned from 1 to 35 degrees North and the value minimising the month-to-month coefficient of variation of the 95th-percentile clearness index was selected. Leave-one-year-out resampling over 2018-2024 gave 23.71 +/- 0.25 degrees North. See ml/site_inference.py and docs/site_resolution.md. Elevation is NOT identifiable from this dataset. The 300 m value is a declared modelling assumption, not a measurement. Its influence on ET0 is quantified in the sensitivity table referenced below.",
+      "caveats": "The clearness-index estimator assumes atmospheric turbidity is constant through the year. Indian winter haze and pre-monsoon dust both break that assumption and both bias the estimate towards higher latitude, so 23.7 N is an upper-leaning estimate and must not be reported as the site's location. The geographic provenance of the weather series remains UNRESOLVED. In particular this estimate does not support treating the series as a Karnataka record: see docs/site_resolution.md for the rainfall-regime evidence pointing the same way.",
+      "latitude_envelope_deg": [
+        11.5,
+        25.0
+      ],
+      "elevation_envelope_m": [
+        0.0,
+        1000.0
+      ]
+    },
+    "et0": {
+      "method": "FAO-56 Penman-Monteith (Allen et al. 1998, eq. 6)",
+      "soil_heat_flux_mj_m2_day": 0.0,
+      "albedo": 0.23,
+      "wind_height_correction_applied": false,
+      "wind_height_note": "The wind series is already referenced to 2 m, which is the FAO-56 reference height, so equation 47 is deliberately not applied.",
+      "actual_vapour_pressure": "FAO-56 eq. 19 from mean relative humidity, because the series reports a single daily RH rather than the RHmax/RHmin pair equation 17 requires.",
+      "mean_et0_mm_day": 5.4501
+    },
+    "crop_coefficients": {
+      "shape": "FAO-56 four-stage curve, linear interpolation across development and late season",
+      "crops": [
+        "chickpea",
+        "cotton",
+        "cumin",
+        "finger_millet",
+        "groundnut",
+        "maize",
+        "paddy",
+        "wheat"
+      ],
+      "stage_boundary_source": "config/crop_stages.yaml",
+      "note": "Stage boundaries for paddy and finger millet are documented reconciliations of overlapping free-text windows."
+    },
+    "effective_rainfall": {
+      "method": "daily_threshold_fraction",
+      "parameters": {
+        "interception_threshold_mm": 2.0,
+        "infiltration_fraction": 0.75,
+        "max_daily_storage_mm": "per-crop root zone"
+      },
+      "description": "Indicative values chosen to behave sensibly at the daily time step: light showers contribute nothing, moderate rain contributes most of its depth, and a single storm cannot recharge more than the root zone holds. These are modelling assumptions, not locally calibrated constants, and the sensitivity of the irrigation advice to them is reported."
+    },
+    "irrigation": {
+      "method": "furrow",
+      "application_efficiency": 0.65,
+      "efficiency_confidence": "indicative",
+      "gross_definition": "gross = net / application efficiency"
+    },
+    "soil_water": {
+      "soil_type": "loam",
+      "available_water_mm_per_m": 160.0,
+      "depletion_fraction_p": 0.5,
+      "status": "ESTIMATED, not measured. No soil moisture sensor exists in this project."
+    },
+    "cohort_design": {
+      "sowing_interval_days": 15,
+      "drop_incomplete_cycles": true,
+      "basis": "A 15-day interval spans every part of the seasonal cycle several times over seven years while keeping the panel small enough to train on a laptop. Cycles that would run past the end of the weather record are dropped rather than truncated, so every cohort is a complete crop cycle.\n",
+      "status": "Simulated sowing dates swept across real weather. Not observed planting dates.",
+      "cohorts": 1301,
+      "crop_day_records": 158118
+    },
+    "units": {
+      "depth": "mm",
+      "volume": "litres, computed only when a field area is supplied",
+      "litres_per_mm_per_hectare": 10000.0
+    },
+    "limitations": [
+      "The target is reference-derived, not an observed field measurement.",
+      "Site geography is unresolved; ET0 varies by about 1.7 percent across the plausible envelope.",
+      "Application efficiencies are indicative published values, not measurements at any field in this study.",
+      "Root-zone depletion is a bookkeeping estimate with no sensor behind it.",
+      "Sowing dates are a designed sweep, not observed planting."
+    ]
+  },
+  "preprocessing": "Imputation, scaling and one-hot encoding are inside the saved pipeline and were fitted on the training partition only, so inference uses exactly the preprocessing used in training."
+}

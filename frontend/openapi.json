@@ -1,0 +1,6075 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "Jalachakra API",
+  "description": "Crop water requirement prediction and irrigation decision support.\n\n**What the numbers mean.** `cwr_mm_day` is crop water *demand*: what the crop will transpire. `net_irrigation_mm` is what must reach the root zone after rainfall. `gross_irrigation_mm` is what must be *delivered*, and is always the larger figure because no irrigation system is fully efficient. These are three different quantities and the API never conflates them.\n\n**What the model was trained on.** A FAO-56 reference-derived crop evapotranspiration, not observed field water use. No independently observed water requirement exists in this project's data, and `/api/v1/data-quality/summary` says so in the response.",
+  "version": "1.0.0"
+ },
+ "paths": {
+  "/api/v1/auth/register": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Register",
+    "description": "Create an account and its farmer profile in one step.\n\nA user without a farmer profile cannot own a farm, so creating the two\ntogether removes a state the rest of the API would have to guard against.",
+    "operationId": "register_api_v1_auth_register_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RegisterRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/login": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Login",
+    "operationId": "login_api_v1_auth_login_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LoginRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TokenPair"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/refresh": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Refresh",
+    "operationId": "refresh_api_v1_auth_refresh_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RefreshRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TokenPair"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/me": {
+   "get": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Me",
+    "operationId": "me_api_v1_auth_me_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserOut"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/auth/logout": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Logout",
+    "description": "Client-side logout.\n\nTokens are stateless and self-expiring, so there is nothing to revoke\nserver-side without a denylist. Saying so is better than implying a\nserver-side session that does not exist.",
+    "operationId": "logout_api_v1_auth_logout_post",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Message"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/farmers/profile": {
+   "get": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Get Profile",
+    "operationId": "get_profile_api_v1_farmers_profile_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/FarmerOut"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   },
+   "put": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Update Profile",
+    "operationId": "update_profile_api_v1_farmers_profile_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FarmerUpdate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/FarmerOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/farms": {
+   "get": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "List Farms",
+    "operationId": "list_farms_api_v1_farms_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/FarmOut"
+         },
+         "type": "array",
+         "title": "Response List Farms Api V1 Farms Get"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   },
+   "post": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Create Farm",
+    "operationId": "create_farm_api_v1_farms_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FarmCreate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/FarmOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/farms/{farm_id}": {
+   "get": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Get Farm",
+    "operationId": "get_farm_api_v1_farms__farm_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "farm_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Farm Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/FarmDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Update Farm",
+    "operationId": "update_farm_api_v1_farms__farm_id__put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "farm_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Farm Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FarmUpdate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/FarmOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Delete Farm",
+    "operationId": "delete_farm_api_v1_farms__farm_id__delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "farm_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Farm Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Message"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/farms/{farm_id}/fields": {
+   "get": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "List Fields",
+    "operationId": "list_fields_api_v1_farms__farm_id__fields_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "farm_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Farm Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/FieldOut"
+         },
+         "title": "Response List Fields Api V1 Farms  Farm Id  Fields Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Create Field",
+    "operationId": "create_field_api_v1_farms__farm_id__fields_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "farm_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Farm Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FieldCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/FieldOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/fields/{field_id}": {
+   "put": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Update Field",
+    "operationId": "update_field_api_v1_fields__field_id__put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Field Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FieldUpdate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/FieldOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Delete Field",
+    "operationId": "delete_field_api_v1_fields__field_id__delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Field Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Message"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/fields/{field_id}/crops": {
+   "get": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "List Plantings",
+    "operationId": "list_plantings_api_v1_fields__field_id__crops_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Field Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/FieldCropDetail"
+         },
+         "title": "Response List Plantings Api V1 Fields  Field Id  Crops Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Create Planting",
+    "operationId": "create_planting_api_v1_fields__field_id__crops_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Field Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FieldCropCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/FieldCropDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/field-crops/{field_crop_id}": {
+   "get": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Get Planting",
+    "operationId": "get_planting_api_v1_field_crops__field_crop_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_crop_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Field Crop Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/FieldCropDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/field-crops": {
+   "get": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "List All Plantings",
+    "description": "Every planting the farmer has, across all farms and fields.",
+    "operationId": "list_all_plantings_api_v1_field_crops_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "active_only",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": true,
+       "title": "Active Only"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/FieldCropDetail"
+         },
+         "title": "Response List All Plantings Api V1 Field Crops Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/fields/{field_id}/soil-data": {
+   "post": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "Add Soil Sample",
+    "operationId": "add_soil_sample_api_v1_fields__field_id__soil_data_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Field Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SoilDataCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SoilDataOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "farms"
+    ],
+    "summary": "List Soil Samples",
+    "operationId": "list_soil_samples_api_v1_fields__field_id__soil_data_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Field Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/SoilDataOut"
+         },
+         "title": "Response List Soil Samples Api V1 Fields  Field Id  Soil Data Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/crops": {
+   "get": {
+    "tags": [
+     "crops"
+    ],
+    "summary": "List Crops",
+    "description": "Every crop the system can model.\n\nA crop appears here only if it has a complete four-stage coefficient curve.\nOffering a crop the system cannot actually compute would produce a confusing\nfailure later in the prediction flow.",
+    "operationId": "list_crops_api_v1_crops_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/CropOut"
+         },
+         "type": "array",
+         "title": "Response List Crops Api V1 Crops Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/crops/{crop_id}": {
+   "get": {
+    "tags": [
+     "crops"
+    ],
+    "summary": "Get Crop",
+    "operationId": "get_crop_api_v1_crops__crop_id__get",
+    "parameters": [
+     {
+      "name": "crop_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Crop Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CropDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/crops/{crop_id}/growth-stages": {
+   "get": {
+    "tags": [
+     "crops"
+    ],
+    "summary": "Get Growth Stages",
+    "operationId": "get_growth_stages_api_v1_crops__crop_id__growth_stages_get",
+    "parameters": [
+     {
+      "name": "crop_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Crop Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/GrowthStageOut"
+         },
+         "title": "Response Get Growth Stages Api V1 Crops  Crop Id  Growth Stages Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/crops/{crop_id}/kc-curve": {
+   "get": {
+    "tags": [
+     "crops"
+    ],
+    "summary": "Get Kc Curve",
+    "description": "The day-by-day crop coefficient curve, for the growth-stage timeline.\n\nDevelopment and late-season values are interpolated rather than tabulated,\nso this is a continuous curve rather than four steps.",
+    "operationId": "get_kc_curve_api_v1_crops__crop_id__kc_curve_get",
+    "parameters": [
+     {
+      "name": "crop_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Crop Id"
+      }
+     },
+     {
+      "name": "step_days",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 30,
+       "minimum": 1,
+       "default": 1,
+       "title": "Step Days"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/KcCurvePoint"
+         },
+         "title": "Response Get Kc Curve Api V1 Crops  Crop Id  Kc Curve Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/predictions/cwr": {
+   "post": {
+    "tags": [
+     "predictions"
+    ],
+    "summary": "Predict Crop Water Requirement",
+    "description": "Estimate today's crop water demand and the irrigation it implies.",
+    "operationId": "predict_crop_water_requirement_api_v1_predictions_cwr_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PredictionRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PredictionOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/predictions/history": {
+   "get": {
+    "tags": [
+     "predictions"
+    ],
+    "summary": "Prediction History",
+    "operationId": "prediction_history_api_v1_predictions_history_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_crop_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Field Crop Id"
+      }
+     },
+     {
+      "name": "start_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Start Date"
+      }
+     },
+     {
+      "name": "end_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "End Date"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 500,
+       "minimum": 1,
+       "default": 100,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/PredictionSummary"
+         },
+         "title": "Response Prediction History Api V1 Predictions History Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/predictions/{prediction_id}": {
+   "get": {
+    "tags": [
+     "predictions"
+    ],
+    "summary": "Prediction Detail",
+    "operationId": "prediction_detail_api_v1_predictions__prediction_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "prediction_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Prediction Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Prediction Detail Api V1 Predictions  Prediction Id  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/predictions/{prediction_id}/explanation": {
+   "get": {
+    "tags": [
+     "predictions"
+    ],
+    "summary": "Prediction Explanation",
+    "description": "Why the model produced this number, and how it compares to the reference.",
+    "operationId": "prediction_explanation_api_v1_predictions__prediction_id__explanation_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "prediction_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Prediction Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ExplanationOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/irrigation/calculate": {
+   "post": {
+    "tags": [
+     "irrigation"
+    ],
+    "summary": "Calculate Irrigation",
+    "description": "Recalculate the requirement under different assumptions.\n\nThis is the what-if tool: take an existing prediction and ask what changes\nif the irrigation system were more efficient, or if forecast rain is counted.\nThe stored prediction is not modified, so the original advice stays intact.",
+    "operationId": "calculate_irrigation_api_v1_irrigation_calculate_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/IrrigationCalculationRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IrrigationCalculationOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/irrigation/records": {
+   "post": {
+    "tags": [
+     "irrigation"
+    ],
+    "summary": "Record Irrigation",
+    "description": "Log an irrigation event, and mirror it into the water-use ledger.",
+    "operationId": "record_irrigation_api_v1_irrigation_records_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/IrrigationRecordCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IrrigationRecordOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "irrigation"
+    ],
+    "summary": "List Irrigation Records",
+    "operationId": "list_irrigation_records_api_v1_irrigation_records_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_crop_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Field Crop Id"
+      }
+     },
+     {
+      "name": "start_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Start Date"
+      }
+     },
+     {
+      "name": "end_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "End Date"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 1000,
+       "minimum": 1,
+       "default": 200,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/IrrigationRecordOut"
+         },
+         "title": "Response List Irrigation Records Api V1 Irrigation Records Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/water-use": {
+   "post": {
+    "tags": [
+     "irrigation"
+    ],
+    "summary": "Record Water Use",
+    "operationId": "record_water_use_api_v1_water_use_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WaterUseCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WaterUseOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "irrigation"
+    ],
+    "summary": "List Water Use",
+    "operationId": "list_water_use_api_v1_water_use_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_crop_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Field Crop Id"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 1000,
+       "minimum": 1,
+       "default": 200,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/WaterUseOut"
+         },
+         "title": "Response List Water Use Api V1 Water Use Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/weather/current": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Current Weather",
+    "operationId": "current_weather_api_v1_weather_current_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "farm_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Farm Id"
+      }
+     },
+     {
+      "name": "latitude",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "number",
+         "maximum": 90,
+         "minimum": -90
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Latitude"
+      }
+     },
+     {
+      "name": "longitude",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "number",
+         "maximum": 180,
+         "minimum": -180
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Longitude"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WeatherOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/weather/forecast": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Weather Forecast",
+    "operationId": "weather_forecast_api_v1_weather_forecast_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "farm_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Farm Id"
+      }
+     },
+     {
+      "name": "latitude",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "number",
+         "maximum": 90,
+         "minimum": -90
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Latitude"
+      }
+     },
+     {
+      "name": "longitude",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "number",
+         "maximum": 180,
+         "minimum": -180
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Longitude"
+      }
+     },
+     {
+      "name": "days",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 16,
+       "minimum": 1,
+       "default": 7,
+       "title": "Days"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/WeatherOut"
+         },
+         "title": "Response Weather Forecast Api V1 Weather Forecast Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/weather/status": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Weather Status",
+    "operationId": "weather_status_api_v1_weather_status_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Weather Status Api V1 Weather Status Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/analytics/cwr": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Cwr Analytics",
+    "description": "Predicted demand against water actually applied.\n\nThe balance is the number worth looking at: persistent over-application\nwastes water, persistent under-application stresses the crop. It compares a\nmodelled demand with a farmer-reported application, so it is a planning\nindicator rather than a measurement of either quantity.",
+    "operationId": "cwr_analytics_api_v1_analytics_cwr_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "field_crop_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Field Crop Id"
+      }
+     },
+     {
+      "name": "start_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Start Date"
+      }
+     },
+     {
+      "name": "end_date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "End Date"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AnalyticsOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/advisory": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Latest Advisories",
+    "description": "The most recent advice across all of this farmer's plantings.",
+    "operationId": "latest_advisories_api_v1_advisory_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 20,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Latest Advisories Api V1 Advisory Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/data-quality/summary": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Data Quality Summary",
+    "description": "What the system knows about the trustworthiness of its own inputs.\n\nSurfacing this in the app is deliberate. A farmer acting on an estimate\nbuilt from estimated inputs should be able to see that.",
+    "operationId": "data_quality_summary_api_v1_data_quality_summary_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Data Quality Summary Api V1 Data Quality Summary Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/data-quality/alerts": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Data Quality Alerts",
+    "operationId": "data_quality_alerts_api_v1_data_quality_alerts_get",
+    "parameters": [
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Data Quality Alerts Api V1 Data Quality Alerts Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/model-performance": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Model Performance",
+    "description": "Every trained model version, with the caveats that must accompany them.",
+    "operationId": "model_performance_api_v1_admin_model_performance_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Model Performance Api V1 Admin Model Performance Get"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/admin/dataset-statistics": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Dataset Statistics",
+    "description": "Provenance of the data behind the served model.",
+    "operationId": "dataset_statistics_api_v1_admin_dataset_statistics_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Dataset Statistics Api V1 Admin Dataset Statistics Get"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/admin/prediction-statistics": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Prediction Statistics",
+    "operationId": "prediction_statistics_api_v1_admin_prediction_statistics_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Prediction Statistics Api V1 Admin Prediction Statistics Get"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/recommendations/crops": {
+   "post": {
+    "tags": [
+     "recommendations"
+    ],
+    "summary": "Recommend Crops",
+    "description": "Rank crops on agronomic suitability and on whether the water exists to grow them.\n\nSuitability alone can recommend a crop the farmer cannot water. This combines\nboth and states the trade-off rather than hiding it behind a single score.",
+    "operationId": "recommend_crops_api_v1_recommendations_crops_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CropRecommendationRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CropRecommendationOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/water-intelligence/coverage": {
+   "get": {
+    "tags": [
+     "water intelligence"
+    ],
+    "summary": "Coverage",
+    "description": "What this deployment can answer, and on what evidence.\n\nThe interface calls this before offering a feature, so a farmer is told\n\"this deployment has no price data\" rather than shown an empty column and\nleft to guess whether the crops are worthless or the data is missing.",
+    "operationId": "coverage_api_v1_water_intelligence_coverage_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Coverage Api V1 Water Intelligence Coverage Get"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/water-intelligence/productivity": {
+   "get": {
+    "tags": [
+     "water intelligence"
+    ],
+    "summary": "Productivity",
+    "description": "Rank crops by what they return per unit of water consumed.\n\nTwo productivities are reported because they answer different questions:\nkilograms per cubic metre transpired (what the plant achieves) and per\ncubic metre delivered (what the farmer achieves, after irrigation losses).\nValue per cubic metre uses the annual minimum support price rather than the\nthree-day market snapshot this project happens to hold.",
+    "operationId": "productivity_api_v1_water_intelligence_productivity_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "state",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Narrow the yield median.",
+       "title": "State"
+      },
+      "description": "Narrow the yield median."
+     },
+     {
+      "name": "district",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "District"
+      }
+     },
+     {
+      "name": "min_observations",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 5,
+       "title": "Min Observations"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WaterProductivityResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/water-intelligence/water-budget": {
+   "post": {
+    "tags": [
+     "water intelligence"
+    ],
+    "summary": "Water Budget",
+    "description": "What a finite seasonal water budget will actually grow.\n\nThe farmer states the water they can get - a borewell's seasonal yield, a\ntank, a canal allocation - and the plot they want to grow on. Each crop is\nassessed against that volume: whether it finishes the plot, and if not, how\nmuch of the plot it does finish.\n\nA crop the budget cannot complete is reported with its irrigable area\nrather than dropped, because growing a smaller area properly is a real\ndecision and this endpoint exists to inform it.",
+    "operationId": "water_budget_api_v1_water_intelligence_water_budget_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WaterBudgetRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WaterBudgetResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/water-intelligence/rainfall": {
+   "get": {
+    "tags": [
+     "water intelligence"
+    ],
+    "summary": "District Rainfall",
+    "description": "Recent rainfall for a district, against its long-period normal.\n\nSupply ``farm_id``, or ``state`` and ``district``. The rainfall file covers\ntwenty days, so this is current-season context - departure from normal and\ndry-spell length - and the response says so rather than letting it be read\nas a trend.",
+    "operationId": "district_rainfall_api_v1_water_intelligence_rainfall_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "state",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "State"
+      }
+     },
+     {
+      "name": "district",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "District"
+      }
+     },
+     {
+      "name": "farm_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Farm Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response District Rainfall Api V1 Water Intelligence Rainfall Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/water-intelligence/rainfall/districts": {
+   "get": {
+    "tags": [
+     "water intelligence"
+    ],
+    "summary": "Covered Districts",
+    "description": "Which districts the rainfall file covers.",
+    "operationId": "covered_districts_api_v1_water_intelligence_rainfall_districts_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "state",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "State"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Covered Districts Api V1 Water Intelligence Rainfall Districts Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/": {
+   "get": {
+    "tags": [
+     "meta"
+    ],
+    "summary": "Root",
+    "operationId": "root__get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Root  Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/health": {
+   "get": {
+    "tags": [
+     "meta"
+    ],
+    "summary": "Health",
+    "description": "What is actually working, stated plainly.",
+    "operationId": "health_health_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HealthResponse"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "AdvisoryOut": {
+    "properties": {
+     "advisory_type": {
+      "type": "string",
+      "title": "Advisory Type"
+     },
+     "headline": {
+      "type": "string",
+      "title": "Headline"
+     },
+     "detail": {
+      "type": "string",
+      "title": "Detail"
+     },
+     "priority": {
+      "type": "string",
+      "title": "Priority"
+     },
+     "action_required": {
+      "type": "boolean",
+      "title": "Action Required"
+     }
+    },
+    "type": "object",
+    "required": [
+     "advisory_type",
+     "headline",
+     "detail",
+     "priority",
+     "action_required"
+    ],
+    "title": "AdvisoryOut"
+   },
+   "AnalyticsOut": {
+    "properties": {
+     "field_crop_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Field Crop Id"
+     },
+     "period_start": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Period Start"
+     },
+     "period_end": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Period End"
+     },
+     "predictions": {
+      "type": "integer",
+      "title": "Predictions"
+     },
+     "total_predicted_demand_mm": {
+      "type": "number",
+      "title": "Total Predicted Demand Mm"
+     },
+     "total_net_irrigation_mm": {
+      "type": "number",
+      "title": "Total Net Irrigation Mm"
+     },
+     "total_gross_irrigation_mm": {
+      "type": "number",
+      "title": "Total Gross Irrigation Mm"
+     },
+     "total_water_applied_mm": {
+      "type": "number",
+      "title": "Total Water Applied Mm"
+     },
+     "balance_mm": {
+      "type": "number",
+      "title": "Balance Mm"
+     },
+     "by_growth_stage": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "By Growth Stage"
+     },
+     "daily_series": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Daily Series"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "field_crop_id",
+     "period_start",
+     "period_end",
+     "predictions",
+     "total_predicted_demand_mm",
+     "total_net_irrigation_mm",
+     "total_gross_irrigation_mm",
+     "total_water_applied_mm",
+     "balance_mm",
+     "by_growth_stage",
+     "daily_series",
+     "note"
+    ],
+    "title": "AnalyticsOut"
+   },
+   "CropDetail": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "slug": {
+      "type": "string",
+      "title": "Slug"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "cycle_length_days": {
+      "type": "integer",
+      "title": "Cycle Length Days"
+     },
+     "reference_source": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reference Source"
+     },
+     "stages": {
+      "items": {
+       "$ref": "#/components/schemas/GrowthStageOut"
+      },
+      "type": "array",
+      "title": "Stages"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "slug",
+     "name",
+     "category",
+     "cycle_length_days",
+     "reference_source"
+    ],
+    "title": "CropDetail"
+   },
+   "CropOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "slug": {
+      "type": "string",
+      "title": "Slug"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "cycle_length_days": {
+      "type": "integer",
+      "title": "Cycle Length Days"
+     },
+     "reference_source": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reference Source"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "slug",
+     "name",
+     "category",
+     "cycle_length_days",
+     "reference_source"
+    ],
+    "title": "CropOut"
+   },
+   "CropRecommendationItem": {
+    "properties": {
+     "crop": {
+      "type": "string",
+      "title": "Crop"
+     },
+     "suitability_score": {
+      "type": "number",
+      "title": "Suitability Score"
+     },
+     "suitability_rank": {
+      "type": "integer",
+      "title": "Suitability Rank"
+     },
+     "estimated_season_demand_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Estimated Season Demand Mm"
+     },
+     "water_feasible": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Water Feasible"
+     },
+     "water_balance_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Water Balance Mm"
+     },
+     "combined_score": {
+      "type": "number",
+      "title": "Combined Score"
+     },
+     "reasons": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Reasons"
+     },
+     "caveats": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Caveats"
+     }
+    },
+    "type": "object",
+    "required": [
+     "crop",
+     "suitability_score",
+     "suitability_rank",
+     "estimated_season_demand_mm",
+     "water_feasible",
+     "water_balance_mm",
+     "combined_score",
+     "reasons",
+     "caveats"
+    ],
+    "title": "CropRecommendationItem"
+   },
+   "CropRecommendationOut": {
+    "properties": {
+     "recommendations": {
+      "items": {
+       "$ref": "#/components/schemas/CropRecommendationItem"
+      },
+      "type": "array",
+      "title": "Recommendations"
+     },
+     "method": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Method"
+     },
+     "limitations": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Limitations"
+     }
+    },
+    "type": "object",
+    "required": [
+     "recommendations",
+     "method",
+     "limitations"
+    ],
+    "title": "CropRecommendationOut"
+   },
+   "CropRecommendationRequest": {
+    "properties": {
+     "nitrogen": {
+      "type": "number",
+      "maximum": 500,
+      "minimum": 0,
+      "title": "Nitrogen"
+     },
+     "phosphorus": {
+      "type": "number",
+      "maximum": 500,
+      "minimum": 0,
+      "title": "Phosphorus"
+     },
+     "potassium": {
+      "type": "number",
+      "maximum": 500,
+      "minimum": 0,
+      "title": "Potassium"
+     },
+     "ph": {
+      "type": "number",
+      "maximum": 10,
+      "minimum": 3,
+      "title": "Ph"
+     },
+     "temperature_c": {
+      "type": "number",
+      "maximum": 55,
+      "minimum": -10,
+      "title": "Temperature C"
+     },
+     "humidity_pct": {
+      "type": "number",
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Humidity Pct"
+     },
+     "rainfall_mm": {
+      "type": "number",
+      "maximum": 5000,
+      "minimum": 0,
+      "title": "Rainfall Mm",
+      "description": "Expected seasonal rainfall"
+     },
+     "available_water_mm": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 5000,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Available Water Mm",
+      "description": "Water the farmer can supply over the season, as a depth"
+     },
+     "top_n": {
+      "type": "integer",
+      "maximum": 22,
+      "minimum": 1,
+      "title": "Top N",
+      "default": 5
+     }
+    },
+    "type": "object",
+    "required": [
+     "nitrogen",
+     "phosphorus",
+     "potassium",
+     "ph",
+     "temperature_c",
+     "humidity_pct",
+     "rainfall_mm"
+    ],
+    "title": "CropRecommendationRequest"
+   },
+   "ExplanationOut": {
+    "properties": {
+     "prediction_id": {
+      "type": "integer",
+      "title": "Prediction Id"
+     },
+     "available": {
+      "type": "boolean",
+      "title": "Available"
+     },
+     "method": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Method"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "prediction_mm_day": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Prediction Mm Day"
+     },
+     "contributors": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Contributors"
+     },
+     "baseline_comparison": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Baseline Comparison"
+     }
+    },
+    "type": "object",
+    "required": [
+     "prediction_id",
+     "available"
+    ],
+    "title": "ExplanationOut"
+   },
+   "FarmCreate": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "district": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "District"
+     },
+     "taluk": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Taluk"
+     },
+     "latitude": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 90,
+        "minimum": -90
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Latitude"
+     },
+     "longitude": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 180,
+        "minimum": -180
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Longitude"
+     },
+     "total_area_ha": {
+      "type": "number",
+      "maximum": 100000,
+      "exclusiveMinimum": 0,
+      "title": "Total Area Ha",
+      "description": "Total farm area in hectares"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "total_area_ha"
+    ],
+    "title": "FarmCreate"
+   },
+   "FarmDetail": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "farmer_id": {
+      "type": "integer",
+      "title": "Farmer Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "district": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "District"
+     },
+     "taluk": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Taluk"
+     },
+     "latitude": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Latitude"
+     },
+     "longitude": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Longitude"
+     },
+     "total_area_ha": {
+      "type": "number",
+      "title": "Total Area Ha"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "fields": {
+      "items": {
+       "$ref": "#/components/schemas/FieldOut"
+      },
+      "type": "array",
+      "title": "Fields"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "farmer_id",
+     "name",
+     "state",
+     "district",
+     "taluk",
+     "latitude",
+     "longitude",
+     "total_area_ha",
+     "created_at"
+    ],
+    "title": "FarmDetail"
+   },
+   "FarmOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "farmer_id": {
+      "type": "integer",
+      "title": "Farmer Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "district": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "District"
+     },
+     "taluk": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Taluk"
+     },
+     "latitude": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Latitude"
+     },
+     "longitude": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Longitude"
+     },
+     "total_area_ha": {
+      "type": "number",
+      "title": "Total Area Ha"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "farmer_id",
+     "name",
+     "state",
+     "district",
+     "taluk",
+     "latitude",
+     "longitude",
+     "total_area_ha",
+     "created_at"
+    ],
+    "title": "FarmOut"
+   },
+   "FarmUpdate": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 255,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "district": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "District"
+     },
+     "taluk": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Taluk"
+     },
+     "latitude": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 90,
+        "minimum": -90
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Latitude"
+     },
+     "longitude": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 180,
+        "minimum": -180
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Longitude"
+     },
+     "total_area_ha": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 100000,
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total Area Ha"
+     }
+    },
+    "type": "object",
+    "title": "FarmUpdate"
+   },
+   "FarmerOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "user_id": {
+      "type": "integer",
+      "title": "User Id"
+     },
+     "full_name": {
+      "type": "string",
+      "title": "Full Name"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "district": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "District"
+     },
+     "taluk": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Taluk"
+     },
+     "address": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address"
+     },
+     "preferred_language": {
+      "type": "string",
+      "title": "Preferred Language"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "user_id",
+     "full_name",
+     "phone",
+     "state",
+     "district",
+     "taluk",
+     "address",
+     "preferred_language"
+    ],
+    "title": "FarmerOut"
+   },
+   "FarmerUpdate": {
+    "properties": {
+     "full_name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 255,
+        "minLength": 2
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Full Name"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 32
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "district": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "District"
+     },
+     "taluk": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Taluk"
+     },
+     "address": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address"
+     },
+     "preferred_language": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 10
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preferred Language"
+     }
+    },
+    "type": "object",
+    "title": "FarmerUpdate"
+   },
+   "FieldCreate": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Name"
+     },
+     "area_ha": {
+      "type": "number",
+      "maximum": 100000,
+      "exclusiveMinimum": 0,
+      "title": "Area Ha"
+     },
+     "soil_type": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Soil Type"
+     },
+     "irrigation_method": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "drip",
+         "sprinkler",
+         "furrow",
+         "flood",
+         "basin",
+         "surface"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Irrigation Method"
+     },
+     "irrigation_efficiency": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1,
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Irrigation Efficiency",
+      "description": "Leave unset to use the configured default for the method"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "area_ha"
+    ],
+    "title": "FieldCreate"
+   },
+   "FieldCropCreate": {
+    "properties": {
+     "crop_id": {
+      "type": "integer",
+      "title": "Crop Id"
+     },
+     "sowing_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Sowing Date"
+     },
+     "planting_area_ha": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Planting Area Ha"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "crop_id",
+     "sowing_date"
+    ],
+    "title": "FieldCropCreate"
+   },
+   "FieldCropDetail": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "field_id": {
+      "type": "integer",
+      "title": "Field Id"
+     },
+     "crop_id": {
+      "type": "integer",
+      "title": "Crop Id"
+     },
+     "sowing_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Sowing Date"
+     },
+     "planting_area_ha": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Planting Area Ha"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "crop_name": {
+      "type": "string",
+      "title": "Crop Name"
+     },
+     "crop_slug": {
+      "type": "string",
+      "title": "Crop Slug"
+     },
+     "field_name": {
+      "type": "string",
+      "title": "Field Name"
+     },
+     "days_after_sowing": {
+      "type": "integer",
+      "title": "Days After Sowing"
+     },
+     "current_stage": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Current Stage"
+     },
+     "current_kc": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Current Kc"
+     },
+     "cycle_length_days": {
+      "type": "integer",
+      "title": "Cycle Length Days"
+     },
+     "progress_pct": {
+      "type": "number",
+      "title": "Progress Pct"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "field_id",
+     "crop_id",
+     "sowing_date",
+     "planting_area_ha",
+     "status",
+     "notes",
+     "crop_name",
+     "crop_slug",
+     "field_name",
+     "days_after_sowing",
+     "current_stage",
+     "current_kc",
+     "cycle_length_days",
+     "progress_pct"
+    ],
+    "title": "FieldCropDetail"
+   },
+   "FieldOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "farm_id": {
+      "type": "integer",
+      "title": "Farm Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "area_ha": {
+      "type": "number",
+      "title": "Area Ha"
+     },
+     "soil_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Soil Type"
+     },
+     "irrigation_method": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Irrigation Method"
+     },
+     "irrigation_efficiency": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Irrigation Efficiency"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "farm_id",
+     "name",
+     "area_ha",
+     "soil_type",
+     "irrigation_method",
+     "irrigation_efficiency"
+    ],
+    "title": "FieldOut"
+   },
+   "FieldUpdate": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 255,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "area_ha": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 100000,
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Area Ha"
+     },
+     "soil_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Soil Type"
+     },
+     "irrigation_method": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "drip",
+         "sprinkler",
+         "furrow",
+         "flood",
+         "basin",
+         "surface"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Irrigation Method"
+     },
+     "irrigation_efficiency": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1,
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Irrigation Efficiency"
+     }
+    },
+    "type": "object",
+    "title": "FieldUpdate"
+   },
+   "GrowthStageOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "stage_name": {
+      "type": "string",
+      "title": "Stage Name"
+     },
+     "stage_order": {
+      "type": "integer",
+      "title": "Stage Order"
+     },
+     "start_day": {
+      "type": "integer",
+      "title": "Start Day"
+     },
+     "end_day": {
+      "type": "integer",
+      "title": "End Day"
+     },
+     "kc_value": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kc Value"
+     },
+     "kc_basis": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kc Basis"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "stage_name",
+     "stage_order",
+     "start_day",
+     "end_day",
+     "kc_value",
+     "kc_basis"
+    ],
+    "title": "GrowthStageOut"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "HealthResponse": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "environment": {
+      "type": "string",
+      "title": "Environment"
+     },
+     "database": {
+      "type": "string",
+      "title": "Database"
+     },
+     "model_available": {
+      "type": "boolean",
+      "title": "Model Available"
+     },
+     "model_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model Version"
+     },
+     "weather_provider": {
+      "type": "string",
+      "title": "Weather Provider"
+     },
+     "site_resolution_status": {
+      "type": "string",
+      "title": "Site Resolution Status"
+     },
+     "notes": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "environment",
+     "database",
+     "model_available",
+     "weather_provider",
+     "site_resolution_status"
+    ],
+    "title": "HealthResponse"
+   },
+   "IntervalOut": {
+    "properties": {
+     "lower_mm_day": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lower Mm Day"
+     },
+     "upper_mm_day": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Upper Mm Day"
+     },
+     "nominal_coverage": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nominal Coverage"
+     },
+     "method": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Method"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "lower_mm_day",
+     "upper_mm_day",
+     "nominal_coverage",
+     "method",
+     "note"
+    ],
+    "title": "IntervalOut"
+   },
+   "IrrigationCalculationOut": {
+    "properties": {
+     "prediction_id": {
+      "type": "integer",
+      "title": "Prediction Id"
+     },
+     "cwr_mm_day": {
+      "type": "number",
+      "title": "Cwr Mm Day"
+     },
+     "effective_rainfall_mm": {
+      "type": "number",
+      "title": "Effective Rainfall Mm"
+     },
+     "forecast_rainfall_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Forecast Rainfall Mm"
+     },
+     "net_irrigation_mm": {
+      "type": "number",
+      "title": "Net Irrigation Mm"
+     },
+     "gross_irrigation_mm": {
+      "type": "number",
+      "title": "Gross Irrigation Mm"
+     },
+     "gross_irrigation_litres": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gross Irrigation Litres"
+     },
+     "application_efficiency": {
+      "type": "number",
+      "title": "Application Efficiency"
+     },
+     "assumptions": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Assumptions"
+     }
+    },
+    "type": "object",
+    "required": [
+     "prediction_id",
+     "cwr_mm_day",
+     "effective_rainfall_mm",
+     "forecast_rainfall_mm",
+     "net_irrigation_mm",
+     "gross_irrigation_mm",
+     "gross_irrigation_litres",
+     "application_efficiency",
+     "assumptions"
+    ],
+    "title": "IrrigationCalculationOut"
+   },
+   "IrrigationCalculationRequest": {
+    "properties": {
+     "prediction_id": {
+      "type": "integer",
+      "title": "Prediction Id"
+     },
+     "irrigation_efficiency": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1,
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Irrigation Efficiency"
+     },
+     "forecast_rainfall_mm": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1500,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Forecast Rainfall Mm"
+     },
+     "area_ha": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Area Ha"
+     }
+    },
+    "type": "object",
+    "required": [
+     "prediction_id"
+    ],
+    "title": "IrrigationCalculationRequest"
+   },
+   "IrrigationRecordCreate": {
+    "properties": {
+     "field_crop_id": {
+      "type": "integer",
+      "title": "Field Crop Id"
+     },
+     "irrigation_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Irrigation Date"
+     },
+     "method": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Method"
+     },
+     "duration_hours": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 48,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration Hours"
+     },
+     "water_applied_mm": {
+      "type": "number",
+      "maximum": 1000,
+      "minimum": 0,
+      "title": "Water Applied Mm"
+     },
+     "application_efficiency": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1,
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Application Efficiency"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "field_crop_id",
+     "irrigation_date",
+     "water_applied_mm"
+    ],
+    "title": "IrrigationRecordCreate"
+   },
+   "IrrigationRecordOut": {
+    "properties": {
+     "field_crop_id": {
+      "type": "integer",
+      "title": "Field Crop Id"
+     },
+     "irrigation_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Irrigation Date"
+     },
+     "method": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Method"
+     },
+     "duration_hours": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 48,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration Hours"
+     },
+     "water_applied_mm": {
+      "type": "number",
+      "maximum": 1000,
+      "minimum": 0,
+      "title": "Water Applied Mm"
+     },
+     "application_efficiency": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1,
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Application Efficiency"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "field_crop_id",
+     "irrigation_date",
+     "water_applied_mm",
+     "id",
+     "created_at"
+    ],
+    "title": "IrrigationRecordOut"
+   },
+   "KcCurvePoint": {
+    "properties": {
+     "days_after_sowing": {
+      "type": "integer",
+      "title": "Days After Sowing"
+     },
+     "stage": {
+      "type": "string",
+      "title": "Stage"
+     },
+     "kc": {
+      "type": "number",
+      "title": "Kc"
+     }
+    },
+    "type": "object",
+    "required": [
+     "days_after_sowing",
+     "stage",
+     "kc"
+    ],
+    "title": "KcCurvePoint"
+   },
+   "LoginRequest": {
+    "properties": {
+     "email": {
+      "type": "string",
+      "format": "email",
+      "title": "Email"
+     },
+     "password": {
+      "type": "string",
+      "title": "Password"
+     }
+    },
+    "type": "object",
+    "required": [
+     "email",
+     "password"
+    ],
+    "title": "LoginRequest"
+   },
+   "Message": {
+    "properties": {
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "message"
+    ],
+    "title": "Message"
+   },
+   "ModelInfoOut": {
+    "properties": {
+     "available": {
+      "type": "boolean",
+      "title": "Available"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Version"
+     },
+     "algorithm": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Algorithm"
+     },
+     "task": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Task"
+     },
+     "unavailable_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unavailable Reason"
+     }
+    },
+    "type": "object",
+    "required": [
+     "available"
+    ],
+    "title": "ModelInfoOut"
+   },
+   "PredictionOut": {
+    "properties": {
+     "id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "field_crop_id": {
+      "type": "integer",
+      "title": "Field Crop Id"
+     },
+     "prediction_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Prediction Date"
+     },
+     "crop_name": {
+      "type": "string",
+      "title": "Crop Name"
+     },
+     "crop_slug": {
+      "type": "string",
+      "title": "Crop Slug"
+     },
+     "growth_stage": {
+      "type": "string",
+      "title": "Growth Stage"
+     },
+     "days_after_sowing": {
+      "type": "integer",
+      "title": "Days After Sowing"
+     },
+     "kc_value": {
+      "type": "number",
+      "title": "Kc Value"
+     },
+     "et0_mm_day": {
+      "type": "number",
+      "title": "Et0 Mm Day",
+      "description": "Reference evapotranspiration, FAO-56"
+     },
+     "cwr_mm_day": {
+      "type": "number",
+      "title": "Cwr Mm Day",
+      "description": "Crop water demand; what the crop will transpire"
+     },
+     "cwr_baseline_mm_day": {
+      "type": "number",
+      "title": "Cwr Baseline Mm Day",
+      "description": "The same quantity from the physics reference"
+     },
+     "interval": {
+      "$ref": "#/components/schemas/IntervalOut"
+     },
+     "rainfall_mm": {
+      "type": "number",
+      "title": "Rainfall Mm"
+     },
+     "effective_rainfall_mm": {
+      "type": "number",
+      "title": "Effective Rainfall Mm",
+      "description": "Part of the rain that reaches the roots"
+     },
+     "net_irrigation_mm": {
+      "type": "number",
+      "title": "Net Irrigation Mm",
+      "description": "Depth that must reach the root zone"
+     },
+     "gross_irrigation_mm": {
+      "type": "number",
+      "title": "Gross Irrigation Mm",
+      "description": "Depth that must be delivered to the field"
+     },
+     "gross_irrigation_litres": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gross Irrigation Litres",
+      "description": "Computed only when a field area is known"
+     },
+     "application_efficiency": {
+      "type": "number",
+      "title": "Application Efficiency"
+     },
+     "water_need": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Water Need"
+     },
+     "model_info": {
+      "$ref": "#/components/schemas/ModelInfoOut"
+     },
+     "prediction_source": {
+      "type": "string",
+      "enum": [
+       "ml_model",
+       "physics_baseline"
+      ],
+      "title": "Prediction Source"
+     },
+     "estimated_inputs": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Estimated Inputs"
+     },
+     "advisories": {
+      "items": {
+       "$ref": "#/components/schemas/AdvisoryOut"
+      },
+      "type": "array",
+      "title": "Advisories"
+     },
+     "assumptions": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Assumptions"
+     },
+     "weather_used": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Weather Used"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "field_crop_id",
+     "prediction_date",
+     "crop_name",
+     "crop_slug",
+     "growth_stage",
+     "days_after_sowing",
+     "kc_value",
+     "et0_mm_day",
+     "cwr_mm_day",
+     "cwr_baseline_mm_day",
+     "interval",
+     "rainfall_mm",
+     "effective_rainfall_mm",
+     "net_irrigation_mm",
+     "gross_irrigation_mm",
+     "application_efficiency",
+     "water_need",
+     "model_info",
+     "prediction_source",
+     "estimated_inputs",
+     "advisories",
+     "assumptions",
+     "weather_used"
+    ],
+    "title": "PredictionOut",
+    "description": "The core response.\n\nDemand and irrigation requirement are separate fields, and net and gross are\nseparate fields, because collapsing either pair is how this kind of system\ngives wrong advice."
+   },
+   "PredictionRequest": {
+    "properties": {
+     "field_crop_id": {
+      "type": "integer",
+      "title": "Field Crop Id"
+     },
+     "prediction_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Prediction Date",
+      "description": "Defaults to today"
+     },
+     "weather": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/WeatherInputSchema"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Supply readings directly, or leave unset to use the configured provider"
+     },
+     "use_weather_provider": {
+      "type": "boolean",
+      "title": "Use Weather Provider",
+      "description": "Fetch weather from the configured provider using the farm's coordinates",
+      "default": false
+     },
+     "rain_last_7_days_mm": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 5000,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rain Last 7 Days Mm"
+     },
+     "rain_last_30_days_mm": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 20000,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rain Last 30 Days Mm"
+     },
+     "days_since_rain": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 365,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Days Since Rain"
+     },
+     "forecast_rainfall_mm": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1500,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Forecast Rainfall Mm"
+     },
+     "irrigation_efficiency_override": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1,
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Irrigation Efficiency Override"
+     },
+     "persist": {
+      "type": "boolean",
+      "title": "Persist",
+      "description": "Store the prediction for history",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "field_crop_id"
+    ],
+    "title": "PredictionRequest"
+   },
+   "PredictionSummary": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "prediction_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Prediction Date"
+     },
+     "growth_stage": {
+      "type": "string",
+      "title": "Growth Stage"
+     },
+     "kc_value": {
+      "type": "number",
+      "title": "Kc Value"
+     },
+     "et0_mm_day": {
+      "type": "number",
+      "title": "Et0 Mm Day"
+     },
+     "cwr_mm_day": {
+      "type": "number",
+      "title": "Cwr Mm Day"
+     },
+     "net_irrigation_mm": {
+      "type": "number",
+      "title": "Net Irrigation Mm"
+     },
+     "gross_irrigation_mm": {
+      "type": "number",
+      "title": "Gross Irrigation Mm"
+     },
+     "prediction_source": {
+      "type": "string",
+      "title": "Prediction Source"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "prediction_date",
+     "growth_stage",
+     "kc_value",
+     "et0_mm_day",
+     "cwr_mm_day",
+     "net_irrigation_mm",
+     "gross_irrigation_mm",
+     "prediction_source",
+     "created_at"
+    ],
+    "title": "PredictionSummary"
+   },
+   "RefreshRequest": {
+    "properties": {
+     "refresh_token": {
+      "type": "string",
+      "title": "Refresh Token"
+     }
+    },
+    "type": "object",
+    "required": [
+     "refresh_token"
+    ],
+    "title": "RefreshRequest"
+   },
+   "RegisterRequest": {
+    "properties": {
+     "email": {
+      "type": "string",
+      "format": "email",
+      "title": "Email"
+     },
+     "password": {
+      "type": "string",
+      "maxLength": 72,
+      "minLength": 8,
+      "title": "Password",
+      "description": "At least 8 characters; bcrypt caps at 72 bytes"
+     },
+     "full_name": {
+      "type": "string",
+      "maxLength": 255,
+      "minLength": 2,
+      "title": "Full Name"
+     },
+     "phone": {
+      "type": "string",
+      "title": "Phone",
+      "description": "10-digit Indian mobile number"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 100
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "district": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 100
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "District"
+     },
+     "taluk": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 100
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Taluk"
+     }
+    },
+    "type": "object",
+    "required": [
+     "email",
+     "password",
+     "full_name",
+     "phone"
+    ],
+    "title": "RegisterRequest"
+   },
+   "SoilDataCreate": {
+    "properties": {
+     "sample_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sample Date"
+     },
+     "ph_level": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 14,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ph Level"
+     },
+     "nitrogen": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nitrogen"
+     },
+     "phosphorus": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phosphorus"
+     },
+     "potassium": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Potassium"
+     },
+     "organic_matter": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 100,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Organic Matter"
+     },
+     "texture": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Texture"
+     }
+    },
+    "type": "object",
+    "title": "SoilDataCreate"
+   },
+   "SoilDataOut": {
+    "properties": {
+     "sample_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sample Date"
+     },
+     "ph_level": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 14,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ph Level"
+     },
+     "nitrogen": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nitrogen"
+     },
+     "phosphorus": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phosphorus"
+     },
+     "potassium": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Potassium"
+     },
+     "organic_matter": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 100,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Organic Matter"
+     },
+     "texture": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Texture"
+     },
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "field_id": {
+      "type": "integer",
+      "title": "Field Id"
+     },
+     "source": {
+      "type": "string",
+      "title": "Source"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "field_id",
+     "source"
+    ],
+    "title": "SoilDataOut"
+   },
+   "TokenPair": {
+    "properties": {
+     "access_token": {
+      "type": "string",
+      "title": "Access Token"
+     },
+     "refresh_token": {
+      "type": "string",
+      "title": "Refresh Token"
+     },
+     "token_type": {
+      "type": "string",
+      "title": "Token Type",
+      "default": "bearer"
+     },
+     "expires_in": {
+      "type": "integer",
+      "title": "Expires In"
+     }
+    },
+    "type": "object",
+    "required": [
+     "access_token",
+     "refresh_token",
+     "expires_in"
+    ],
+    "title": "TokenPair"
+   },
+   "UserOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "email": {
+      "type": "string",
+      "title": "Email"
+     },
+     "full_name": {
+      "type": "string",
+      "title": "Full Name"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone"
+     },
+     "role": {
+      "type": "string",
+      "title": "Role"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "email",
+     "full_name",
+     "phone",
+     "role",
+     "is_active",
+     "created_at"
+    ],
+    "title": "UserOut"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   },
+   "WaterBudgetOptionOut": {
+    "properties": {
+     "crop": {
+      "type": "string",
+      "title": "Crop"
+     },
+     "water_needed_m3": {
+      "type": "number",
+      "title": "Water Needed M3",
+      "description": "Gross irrigation for the whole plot, losses included."
+     },
+     "feasible": {
+      "type": "boolean",
+      "title": "Feasible"
+     },
+     "irrigable_area_ha": {
+      "type": "number",
+      "title": "Irrigable Area Ha",
+      "description": "Area the budget can finish, which may be under the plot."
+     },
+     "coverage": {
+      "type": "number",
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Coverage",
+      "description": "Fraction of the plot covered."
+     },
+     "expected_yield_kg": {
+      "type": "number",
+      "title": "Expected Yield Kg"
+     },
+     "expected_value_rs": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expected Value Rs"
+     },
+     "wp_applied_kg_per_m3": {
+      "type": "number",
+      "title": "Wp Applied Kg Per M3"
+     },
+     "ewp_applied_rs_per_m3": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ewp Applied Rs Per M3"
+     }
+    },
+    "type": "object",
+    "required": [
+     "crop",
+     "water_needed_m3",
+     "feasible",
+     "irrigable_area_ha",
+     "coverage",
+     "expected_yield_kg",
+     "expected_value_rs",
+     "wp_applied_kg_per_m3",
+     "ewp_applied_rs_per_m3"
+    ],
+    "title": "WaterBudgetOptionOut"
+   },
+   "WaterBudgetRequest": {
+    "properties": {
+     "available_water_m3": {
+      "type": "number",
+      "maximum": 10000000,
+      "exclusiveMinimum": 0,
+      "title": "Available Water M3",
+      "description": "Water available for the whole season, in cubic metres. One cubic metre is a thousand litres."
+     },
+     "plot_area_ha": {
+      "type": "number",
+      "maximum": 100000,
+      "exclusiveMinimum": 0,
+      "title": "Plot Area Ha",
+      "description": "Area to grow on."
+     },
+     "farm_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Farm Id",
+      "description": "Take the location from one of your farms instead of typing it."
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "district": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "District"
+     }
+    },
+    "type": "object",
+    "required": [
+     "available_water_m3",
+     "plot_area_ha"
+    ],
+    "title": "WaterBudgetRequest",
+    "description": "A finite seasonal water budget and the plot it has to cover."
+   },
+   "WaterBudgetResponse": {
+    "properties": {
+     "options": {
+      "items": {
+       "$ref": "#/components/schemas/WaterBudgetOptionOut"
+      },
+      "type": "array",
+      "title": "Options"
+     },
+     "available_water_m3": {
+      "type": "number",
+      "title": "Available Water M3"
+     },
+     "available_water_litres": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Available Water Litres"
+     },
+     "plot_area_ha": {
+      "type": "number",
+      "title": "Plot Area Ha"
+     },
+     "feasible_count": {
+      "type": "integer",
+      "title": "Feasible Count",
+      "default": 0
+     },
+     "region": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Region"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note"
+     },
+     "limitations": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Limitations"
+     }
+    },
+    "type": "object",
+    "required": [
+     "options",
+     "available_water_m3",
+     "plot_area_ha",
+     "note"
+    ],
+    "title": "WaterBudgetResponse"
+   },
+   "WaterProductivityItem": {
+    "properties": {
+     "crop": {
+      "type": "string",
+      "title": "Crop"
+     },
+     "yield_kg_ha": {
+      "type": "number",
+      "title": "Yield Kg Ha",
+      "description": "Median district yield."
+     },
+     "yield_p25_kg_ha": {
+      "type": "number",
+      "title": "Yield P25 Kg Ha"
+     },
+     "yield_p75_kg_ha": {
+      "type": "number",
+      "title": "Yield P75 Kg Ha"
+     },
+     "observations": {
+      "type": "integer",
+      "title": "Observations",
+      "description": "District-year observations behind the median."
+     },
+     "etc_mm": {
+      "type": "number",
+      "title": "Etc Mm",
+      "description": "Seasonal crop evapotranspiration."
+     },
+     "gross_irrigation_mm": {
+      "type": "number",
+      "title": "Gross Irrigation Mm",
+      "description": "Seasonal water that must be delivered, losses included."
+     },
+     "wp_etc_kg_per_m3": {
+      "type": "number",
+      "title": "Wp Etc Kg Per M3",
+      "description": "Yield per cubic metre transpired. A biological efficiency."
+     },
+     "wp_applied_kg_per_m3": {
+      "type": "number",
+      "title": "Wp Applied Kg Per M3",
+      "description": "Yield per cubic metre delivered. What the farmer achieves."
+     },
+     "revenue_msp_rs_ha": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revenue Msp Rs Ha",
+      "description": "Median yield valued at minimum support price."
+     },
+     "ewp_etc_rs_per_m3": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ewp Etc Rs Per M3"
+     },
+     "ewp_applied_rs_per_m3": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ewp Applied Rs Per M3"
+     },
+     "msp_rs_quintal": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Msp Rs Quintal"
+     },
+     "region": {
+      "type": "string",
+      "title": "Region"
+     }
+    },
+    "type": "object",
+    "required": [
+     "crop",
+     "yield_kg_ha",
+     "yield_p25_kg_ha",
+     "yield_p75_kg_ha",
+     "observations",
+     "etc_mm",
+     "gross_irrigation_mm",
+     "wp_etc_kg_per_m3",
+     "wp_applied_kg_per_m3",
+     "region"
+    ],
+    "title": "WaterProductivityItem",
+    "description": "What one crop returns per unit of water, with the terms behind it."
+   },
+   "WaterProductivityResponse": {
+    "properties": {
+     "crops": {
+      "items": {
+       "$ref": "#/components/schemas/WaterProductivityItem"
+      },
+      "type": "array",
+      "title": "Crops"
+     },
+     "region": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Region"
+     },
+     "requested_district": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Requested District"
+     },
+     "fell_back_to_state": {
+      "type": "boolean",
+      "title": "Fell Back To State",
+      "description": "True when the requested district had too little yield history and the state figure is being shown instead. The interface must say so."
+     },
+     "economic_basis": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Economic Basis"
+     },
+     "interpretation": {
+      "type": "string",
+      "title": "Interpretation"
+     },
+     "limitations": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Limitations"
+     }
+    },
+    "type": "object",
+    "required": [
+     "crops",
+     "region",
+     "requested_district",
+     "fell_back_to_state",
+     "economic_basis",
+     "interpretation",
+     "limitations"
+    ],
+    "title": "WaterProductivityResponse"
+   },
+   "WaterUseCreate": {
+    "properties": {
+     "field_crop_id": {
+      "type": "integer",
+      "title": "Field Crop Id"
+     },
+     "record_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Record Date"
+     },
+     "water_used_mm": {
+      "type": "number",
+      "maximum": 1000,
+      "minimum": 0,
+      "title": "Water Used Mm"
+     },
+     "water_source": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Water Source"
+     },
+     "area_irrigated_ha": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Area Irrigated Ha"
+     },
+     "estimated_cost": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Estimated Cost"
+     }
+    },
+    "type": "object",
+    "required": [
+     "field_crop_id",
+     "record_date",
+     "water_used_mm"
+    ],
+    "title": "WaterUseCreate"
+   },
+   "WaterUseOut": {
+    "properties": {
+     "field_crop_id": {
+      "type": "integer",
+      "title": "Field Crop Id"
+     },
+     "record_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Record Date"
+     },
+     "water_used_mm": {
+      "type": "number",
+      "maximum": 1000,
+      "minimum": 0,
+      "title": "Water Used Mm"
+     },
+     "water_source": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Water Source"
+     },
+     "area_irrigated_ha": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Area Irrigated Ha"
+     },
+     "estimated_cost": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Estimated Cost"
+     },
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "water_used_litres": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Water Used Litres"
+     }
+    },
+    "type": "object",
+    "required": [
+     "field_crop_id",
+     "record_date",
+     "water_used_mm",
+     "id",
+     "water_used_litres"
+    ],
+    "title": "WaterUseOut"
+   },
+   "WeatherInputSchema": {
+    "properties": {
+     "temperature_mean_c": {
+      "type": "number",
+      "maximum": 60,
+      "minimum": -50,
+      "title": "Temperature Mean C"
+     },
+     "temperature_min_c": {
+      "type": "number",
+      "maximum": 55,
+      "minimum": -60,
+      "title": "Temperature Min C"
+     },
+     "temperature_max_c": {
+      "type": "number",
+      "maximum": 65,
+      "minimum": -40,
+      "title": "Temperature Max C"
+     },
+     "humidity_pct": {
+      "type": "number",
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Humidity Pct"
+     },
+     "rainfall_mm": {
+      "type": "number",
+      "maximum": 1500,
+      "minimum": 0,
+      "title": "Rainfall Mm",
+      "default": 0
+     },
+     "wind_speed_ms": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 75,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Wind Speed Ms"
+     },
+     "solar_radiation_mj_m2": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 45,
+        "minimum": 0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Solar Radiation Mj M2"
+     }
+    },
+    "type": "object",
+    "required": [
+     "temperature_mean_c",
+     "temperature_min_c",
+     "temperature_max_c",
+     "humidity_pct"
+    ],
+    "title": "WeatherInputSchema",
+    "description": "Weather supplied directly by the caller.\n\nWind and radiation are optional because a farmer rarely has either. When\nthey are absent the baseline substitutes documented FAO-56 values and the\nresponse says which inputs were estimated."
+   },
+   "WeatherOut": {
+    "properties": {
+     "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+     },
+     "temperature_mean_c": {
+      "type": "number",
+      "title": "Temperature Mean C"
+     },
+     "temperature_min_c": {
+      "type": "number",
+      "title": "Temperature Min C"
+     },
+     "temperature_max_c": {
+      "type": "number",
+      "title": "Temperature Max C"
+     },
+     "humidity_pct": {
+      "type": "number",
+      "title": "Humidity Pct"
+     },
+     "rainfall_mm": {
+      "type": "number",
+      "title": "Rainfall Mm"
+     },
+     "wind_speed_ms": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Wind Speed Ms"
+     },
+     "solar_radiation_mj_m2": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Solar Radiation Mj M2"
+     },
+     "source": {
+      "type": "string",
+      "title": "Source"
+     },
+     "provider": {
+      "type": "string",
+      "title": "Provider"
+     },
+     "is_forecast": {
+      "type": "boolean",
+      "title": "Is Forecast"
+     }
+    },
+    "type": "object",
+    "required": [
+     "date",
+     "temperature_mean_c",
+     "temperature_min_c",
+     "temperature_max_c",
+     "humidity_pct",
+     "rainfall_mm",
+     "wind_speed_ms",
+     "solar_radiation_mj_m2",
+     "source",
+     "provider",
+     "is_forecast"
+    ],
+    "title": "WeatherOut"
+   }
+  },
+  "securitySchemes": {
+   "HTTPBearer": {
+    "type": "http",
+    "scheme": "bearer"
+   }
+  }
+ }
+}

@@ -1,0 +1,174 @@
+# ===========================================================================
+# Jalachakra - growth-stage boundaries and crop coefficient selection
+# ===========================================================================
+# Two things live here, and only two.
+#
+# 1. STAGE BOUNDARIES for the three crops whose reference file states timing as
+#    free text ("~14-34 DAT", "~7-9 weeks after sowing"). Those windows overlap
+#    and leave gaps, so they cannot be turned into a contiguous stage calendar
+#    mechanically. The reconciliation is a modelling decision, and a modelling
+#    decision belongs in configuration where a reviewer can see and change it.
+#
+# 2. CROP COEFFICIENT SELECTION where the reference file offers more than one
+#    value for the same stage. The file frequently gives both a locally measured
+#    value and an FAO-56 tabulated value; the rule used to choose between them is
+#    recorded per crop, and the rejected value is kept as `alternative_kc` so the
+#    sensitivity experiment can run the study both ways.
+#
+# Crops whose stage durations and Kc values are already numeric and complete in
+# datasets/cleaned/Crop_Calender_cleaned.csv are NOT listed here. They are read
+# straight from that file. Adding them here would duplicate data as config.
+#
+# Kc curve shape follows FAO-56: constant at Kc_ini through the initial stage,
+# a straight line from Kc_ini to Kc_mid across the development stage, constant
+# at Kc_mid through mid-season, and a straight line from Kc_mid to Kc_end across
+# the late season.
+# ===========================================================================
+
+crops:
+
+  # -------------------------------------------------------------------------
+  paddy:
+    display_name: Paddy (Rice)
+    source_dataset: Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+    source_crop_label: Paddy (Rice)
+    day_origin: days_after_transplanting
+    kc_selection_rule: >
+      The reference row gives a wet-paddy initial range of 1.05-1.10 and states
+      that the cited local study uses 1.10. The locally measured value is taken
+      because the study is the one the reference file cites for this region; the
+      lower end of the range is retained as the alternative.
+    stage_reconciliation: >
+      The file's stated windows overlap (development ~14-34 DAT, mid-season
+      ~27-65 DAT) and leave a gap between 65 DAT and the ~97-101 DAT maturity
+      window. Boundaries below make the four stages contiguous: initial runs
+      until development begins at 14 DAT; development keeps its stated 14-34 DAT
+      window; mid-season runs from the end of development to the onset of
+      maturity, which is the only reading that leaves no gap; the late season
+      runs from maturity to the stated ~112-113 DAT harvest. Total cycle 112
+      days, consistent with the file's harvest timing.
+    stages:
+      - name: initial
+        start_day: 0
+        end_day: 14
+        kc: 1.10
+        alternative_kc: 1.05
+        kc_basis: Kc_ini, locally measured wet paddy
+      - name: development
+        start_day: 14
+        end_day: 34
+        kc: null          # interpolated between initial and mid per FAO-56
+        kc_basis: interpolated
+      - name: mid_season
+        start_day: 34
+        end_day: 97
+        kc: 1.20
+        alternative_kc: 1.20
+        kc_basis: Kc_mid, wet paddy
+      - name: late_season
+        start_day: 97
+        end_day: 112
+        kc: 1.05
+        alternative_kc: 1.05
+        kc_basis: Kc_end, wet paddy
+
+  # -------------------------------------------------------------------------
+  finger_millet:
+    display_name: Finger Millet (Ragi)
+    source_dataset: Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+    source_crop_label: Finger Millet (Ragi)
+    day_origin: days_after_sowing
+    kc_selection_rule: >
+      Kc_ini and Kc_end are stated as single local values. For mid-season the
+      file gives a local Kc_mid of 1.00 alongside a separate study's peak of
+      1.02 on day 66; 1.00 is used because it is the stage coefficient, while
+      1.02 is a single-day peak, and 1.02 is kept as the alternative.
+    stage_reconciliation: >
+      The file describes development as ~0-6 weeks after sowing, mid-season as
+      ~7-9 weeks, grain development as ~10-12 weeks and maturity as ~13-14
+      weeks. Establishment is not given its own window, so the first two weeks
+      are assigned to the initial stage and development is taken to run from
+      there to the end of week 6. Grain development and maturity are merged into
+      one late season, which is what the FAO-56 four-stage curve expects. Total
+      cycle 98 days.
+    stages:
+      - name: initial
+        start_day: 0
+        end_day: 14
+        kc: 0.30
+        alternative_kc: 0.30
+        kc_basis: Kc_ini, locally measured
+      - name: development
+        start_day: 14
+        end_day: 42
+        kc: null
+        kc_basis: interpolated
+      - name: mid_season
+        start_day: 42
+        end_day: 63
+        kc: 1.00
+        alternative_kc: 1.02
+        kc_basis: Kc_mid, locally measured
+      - name: late_season
+        start_day: 63
+        end_day: 98
+        kc: 0.30
+        alternative_kc: 0.30
+        kc_basis: Kc_end, locally measured
+
+  # -------------------------------------------------------------------------
+  maize:
+    display_name: Maize
+    source_dataset: Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+    source_crop_label: Maize
+    day_origin: days_after_sowing
+    kc_selection_rule: >
+      The file gives a local Kc_mid of 1.20 against an FAO typical of 1.15, and
+      a local Kc_end of 0.35 against an FAO typical of 0.70. The local values are
+      used for consistency with the other two crops, which have no FAO
+      alternative; the FAO values are retained as alternatives because the Kc_end
+      gap is large enough to matter and is exercised by the sensitivity
+      experiment.
+    stage_reconciliation: >
+      No reconciliation was needed. The file states all four stage lengths
+      numerically (20, 35, 40 and 30 days), and they are used as given.
+    stages:
+      - name: initial
+        start_day: 0
+        end_day: 20
+        kc: 0.30
+        alternative_kc: 0.30
+        kc_basis: Kc_ini, locally measured
+      - name: development
+        start_day: 20
+        end_day: 55
+        kc: null
+        kc_basis: interpolated
+      - name: mid_season
+        start_day: 55
+        end_day: 95
+        kc: 1.20
+        alternative_kc: 1.15
+        kc_basis: Kc_mid, local value with FAO-56 alternative
+      - name: late_season
+        start_day: 95
+        end_day: 125
+        kc: 0.35
+        alternative_kc: 0.70
+        kc_basis: Kc_end, local value with FAO-56 alternative
+
+# ===========================================================================
+# Stage-name harmonisation
+# ===========================================================================
+# Different sources spell the same four FAO-56 stages differently. Everything is
+# mapped onto the canonical names used above so that a crop from the calendar
+# file and a crop from the Karnataka file can share one code path.
+stage_aliases:
+  initial: [initial, "initial / establishment", establishment, germination, emergence]
+  development: [development, "development / tillering", "development / vegetative", vegetative, tillering]
+  mid_season: ["mid-season", mid_season, "mid-season / flowering", "mid-season / flowering & grain development", flowering, fruiting]
+  late_season: ["late-season", late_season, "late-season / maturity", "late-season / grain development & maturity", maturity, senescence]
+
+# Rows describing a whole season rather than a stage. They carry season totals,
+# not stage coefficients, and are excluded from the stage curve.
+non_stage_rows: ["total season", "total", harvest]

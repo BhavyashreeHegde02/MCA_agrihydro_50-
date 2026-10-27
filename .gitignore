@@ -1,0 +1,22 @@
+/.env
+/backend/.env
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment files and secrets
+.env*
+!.env.example
+!.env.*.example
+
+# Next.js
+frontend/node_modules/
+frontend/.next/
+
+# Generated files
+*.log
+# Large model files kept locally because of GitHub's 100 MB limit
+artifacts/models/reduced_input_no_stage/v1/pipeline.joblib
+artifacts/research_baselines/random_forest/rf_model.joblib

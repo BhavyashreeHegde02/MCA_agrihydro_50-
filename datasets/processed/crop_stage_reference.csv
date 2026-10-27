@@ -1,0 +1,33 @@
+crop,display_name,stage,stage_order,start_day,end_day,duration_days,kc_anchor,alternative_kc,kc_basis,source
+chickpea,Chickpea,initial,0,0,25,25,0.4,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+chickpea,Chickpea,development,1,25,55,30,,0.7,interpolated,Crop_Calender_cleaned.csv
+chickpea,Chickpea,mid_season,2,55,95,40,1.05,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+chickpea,Chickpea,late_season,3,95,115,20,0.55,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+cotton,Cotton,initial,0,0,30,30,0.45,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+cotton,Cotton,development,1,30,80,50,,0.75,interpolated,Crop_Calender_cleaned.csv
+cotton,Cotton,mid_season,2,80,140,60,1.15,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+cotton,Cotton,late_season,3,140,195,55,0.85,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+cumin,Cumin,initial,0,0,25,25,0.3,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+cumin,Cumin,development,1,25,50,25,,0.5,interpolated,Crop_Calender_cleaned.csv
+cumin,Cumin,mid_season,2,50,90,40,0.7,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+cumin,Cumin,late_season,3,90,100,10,0.4,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+finger_millet,Finger Millet (Ragi),initial,0,0,14,14,0.3,0.3,"Kc_ini, locally measured",Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+finger_millet,Finger Millet (Ragi),development,1,14,42,28,,,interpolated,Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+finger_millet,Finger Millet (Ragi),mid_season,2,42,63,21,1.0,1.02,"Kc_mid, locally measured",Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+finger_millet,Finger Millet (Ragi),late_season,3,63,98,35,0.3,0.3,"Kc_end, locally measured",Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+groundnut,Groundnut,initial,0,0,25,25,0.45,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+groundnut,Groundnut,development,1,25,60,35,,0.75,interpolated,Crop_Calender_cleaned.csv
+groundnut,Groundnut,mid_season,2,60,105,45,0.97,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+groundnut,Groundnut,late_season,3,105,130,25,0.8,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+maize,Maize,initial,0,0,20,20,0.3,0.3,"Kc_ini, locally measured",Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+maize,Maize,development,1,20,55,35,,,interpolated,Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+maize,Maize,mid_season,2,55,95,40,1.2,1.15,"Kc_mid, local value with FAO-56 alternative",Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+maize,Maize,late_season,3,95,125,30,0.35,0.7,"Kc_end, local value with FAO-56 alternative",Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+paddy,Paddy (Rice),initial,0,0,14,14,1.1,1.05,"Kc_ini, locally measured wet paddy",Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+paddy,Paddy (Rice),development,1,14,34,20,,,interpolated,Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+paddy,Paddy (Rice),mid_season,2,34,97,63,1.2,1.2,"Kc_mid, wet paddy",Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+paddy,Paddy (Rice),late_season,3,97,112,15,1.05,1.05,"Kc_end, wet paddy",Karnataka_Crop_Growth_Stage_Reference_cleaned.csv
+wheat,Wheat,initial,0,0,20,20,0.3,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+wheat,Wheat,development,1,20,45,25,,1.15,interpolated,Crop_Calender_cleaned.csv
+wheat,Wheat,mid_season,2,45,80,35,1.2,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv
+wheat,Wheat,late_season,3,80,100,20,0.42,,tabulated in Crop_Calender_cleaned.csv,Crop_Calender_cleaned.csv

@@ -1,0 +1,29 @@
+feature,provenance_class,source_dataset,source_columns,transformation,unit,notes
+allsky_sfc_sw_dwn,raw,Climate_Data.csv,ALLSKY_SFC_SW_DWN,renamed to snake_case; sentinel values converted to NaN; physically impossible values voided,MJ/m2/day,all-sky downward shortwave irradiance; one day was imputed
+datetime,raw,Climate_Data.csv,datetime,parsed to a datetime and sorted ascending,date,"daily, complete, no gaps or repeats"
+prectotcorr,raw,Climate_Data.csv,PRECTOTCORR,renamed to snake_case; sentinel values converted to NaN; physically impossible values voided,mm/day,bias-corrected total precipitation
+rh2m,raw,Climate_Data.csv,RH2M,renamed to snake_case; sentinel values converted to NaN; physically impossible values voided,%,"2 m relative humidity, daily mean"
+t2m,raw,Climate_Data.csv,T2M,renamed to snake_case; sentinel values converted to NaN; physically impossible values voided,degC,"2 m air temperature, daily mean"
+t2m_max,raw,Climate_Data.csv,T2M_MAX,renamed to snake_case; sentinel values converted to NaN; physically impossible values voided,degC,"2 m air temperature, daily maximum"
+t2m_min,raw,Climate_Data.csv,T2M_MIN,renamed to snake_case; sentinel values converted to NaN; physically impossible values voided,degC,"2 m air temperature, daily minimum"
+ws2m,raw,Climate_Data.csv,WS2M,renamed to snake_case; sentinel values converted to NaN; physically impossible values voided,m/s,2 m wind speed; already at the FAO-56 reference height
+allsky_sfc_sw_dwn_was_imputed,derived,Climate_Data.csv,ALLSKY_SFC_SW_DWN,flag marking days whose radiation was filled by FAO-56 eq. 50,0/1,lets any result be recomputed with imputed days excluded
+day_of_year,derived,Climate_Data.csv,datetime,ordinal day of the observation,1-366,
+days_since_rain,derived,Climate_Data.csv,PRECTOTCORR,"consecutive days without measurable rain, capped at 120",days,backward-looking only
+doy_cos,derived,Climate_Data.csv,datetime,cos(2*pi*day_of_year/365.25),dimensionless,cyclical encoding keeps December adjacent to January
+doy_sin,derived,Climate_Data.csv,datetime,sin(2*pi*day_of_year/365.25),dimensionless,cyclical encoding keeps December adjacent to January
+is_rain_day,derived,Climate_Data.csv,PRECTOTCORR,"1 when precipitation exceeds 0, else 0",0/1,
+month,derived,Climate_Data.csv,datetime,calendar month of the observation,1-12,
+month_cos,derived,Climate_Data.csv,datetime,cos(2*pi*(month-1)/12),dimensionless,cyclical encoding keeps December adjacent to January
+month_sin,derived,Climate_Data.csv,datetime,sin(2*pi*(month-1)/12),dimensionless,cyclical encoding keeps December adjacent to January
+rain_days_30d,derived,Climate_Data.csv,PRECTOTCORR,count of rain days in the trailing 30 days,days,
+rain_days_7d,derived,Climate_Data.csv,PRECTOTCORR,count of rain days in the trailing 7 days,days,
+rain_sum_30d_mm,derived,Climate_Data.csv,PRECTOTCORR,trailing 30-day rainfall total ending on the current day,mm,backward-looking window; no future information
+rain_sum_7d_mm,derived,Climate_Data.csv,PRECTOTCORR,trailing 7-day rainfall total ending on the current day,mm,backward-looking window; no future information
+rh_mean_30d_pct,derived,Climate_Data.csv,RH2M,trailing 30-day mean relative humidity,%,
+rh_mean_7d_pct,derived,Climate_Data.csv,RH2M,trailing 7-day mean relative humidity,%,
+temp_mean_30d_c,derived,Climate_Data.csv,T2M,trailing 30-day mean temperature,degC,
+temp_mean_7d_c,derived,Climate_Data.csv,T2M,trailing 7-day mean temperature,degC,
+temp_midrange_c,derived,Climate_Data.csv,"T2M_MAX, T2M_MIN",(T2M_MAX + T2M_MIN) / 2,degC,
+temp_range_c,derived,Climate_Data.csv,"T2M_MAX, T2M_MIN",T2M_MAX - T2M_MIN,degC,proxy for cloudiness; also the input to the FAO-56 radiation estimator
+year,derived,Climate_Data.csv,datetime,calendar year of the observation,year,

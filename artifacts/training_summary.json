@@ -1,0 +1,24 @@
+{
+  "reduced_input": {
+    "best_model": "xgboost",
+    "version": "v1",
+    "test": {
+      "mae_mm_day": 0.3687,
+      "rmse_mm_day": 0.5105,
+      "r2": 0.9527,
+      "nse": 0.9527,
+      "mape_pct": 9.486,
+      "mape_coverage_pct": 99.9,
+      "bias_mm_day": -0.0062,
+      "n": 31560
+    },
+    "interval": {
+      "nominal_coverage": 0.9,
+      "empirical_coverage": 0.9014,
+      "coverage_gap": 0.0014,
+      "mean_interval_width_mm_day": 1.6986,
+      "median_interval_width_mm_day": 1.6997,
+      "n": 31560
+    }
+  }
+}

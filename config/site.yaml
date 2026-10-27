@@ -1,0 +1,91 @@
+# ===========================================================================
+# Jalachakra - weather-site configuration
+# ===========================================================================
+# The daily weather series in datasets/raw/Climate_Data.csv carries NO
+# latitude, longitude or elevation column. FAO-56 Penman-Monteith needs
+# latitude (for extraterrestrial radiation) and elevation (for barometric
+# pressure and the clear-sky radiation ceiling). Those numbers are therefore
+# CONFIGURATION, not data, and this file is the single place they live.
+#
+# Nothing in this repository is allowed to hard-code a coordinate. Every ET0
+# computation reads this file, and every artefact it produces carries the
+# `resolution_status` recorded here so a reader always knows how the site
+# was obtained.
+# ===========================================================================
+
+site:
+  # ---- How was the site obtained? --------------------------------------
+  # measured_provenance : the person who downloaded the weather series has
+  #                       supplied the exact coordinates used. Trustworthy.
+  # inferred_from_data  : no provenance available; the coordinate below was
+  #                       estimated from the series itself (see method).
+  # unresolved          : nothing known. ET0 refuses to run unless
+  #                       allow_provisional is true.
+  resolution_status: inferred_from_data
+
+  latitude_deg: 23.7
+  longitude_deg: null          # not required by FAO-56 daily ET0
+  elevation_m: 300.0
+
+  # ---- Where these numbers came from -----------------------------------
+  provenance: >
+    Latitude was ESTIMATED from the project's own radiation series, not taken
+    from any document and not assumed. Method: on rain-free dry-season days
+    (November-May) the clearest skies should produce a clearness index
+    Rs / Ra(latitude, day-of-year) that is constant through the year. Latitude
+    was scanned from 1 to 35 degrees North and the value minimising the
+    month-to-month coefficient of variation of the 95th-percentile clearness
+    index was selected. Leave-one-year-out resampling over 2018-2024 gave
+    23.71 +/- 0.25 degrees North. See ml/site_inference.py and
+    docs/site_resolution.md.
+
+    Elevation is NOT identifiable from this dataset. The 300 m value is a
+    declared modelling assumption, not a measurement. Its influence on ET0 is
+    quantified in the sensitivity table referenced below.
+
+  # ---- Honest statement of what this estimate does NOT establish -------
+  caveats: >
+    The clearness-index estimator assumes atmospheric turbidity is constant
+    through the year. Indian winter haze and pre-monsoon dust both break that
+    assumption and both bias the estimate towards higher latitude, so 23.7 N
+    is an upper-leaning estimate and must not be reported as the site's
+    location. The geographic provenance of the weather series remains
+    UNRESOLVED. In particular this estimate does not support treating the
+    series as a Karnataka record: see docs/site_resolution.md for the
+    rainfall-regime evidence pointing the same way.
+
+  # ---- Gate -------------------------------------------------------------
+  # Set to false to make the pipeline refuse to compute ET0 until somebody
+  # supplies a coordinate with real provenance. Left true so the research
+  # pipeline is runnable, because the sensitivity study below shows the
+  # unresolved site moves ET0 by less than two percent.
+  allow_provisional: true
+
+# ===========================================================================
+# Envelope used for site-uncertainty propagation
+# ===========================================================================
+# Rather than pretend the coordinate is exact, every ET0 series is also
+# evaluated at the corners of this envelope and the spread is reported
+# alongside the central estimate.
+sensitivity_envelope:
+  latitude_deg: [11.5, 25.0]     # peninsular India through the Tropic of Cancer
+  elevation_m: [0.0, 1000.0]
+  # Measured effect on the 2018-2024 mean ET0, computed by
+  # ml/site_inference.py: +/- 1.7 percent about the envelope mean.
+  # Regenerate with: python -m ml.site_inference --sensitivity
+
+# ===========================================================================
+# FAO-56 physical constants and modelling choices
+# ===========================================================================
+# Kept in configuration so a reviewer can see and change every assumption
+# without reading code.
+fao56:
+  albedo: 0.23                   # FAO-56 grass reference surface
+  solar_constant_mj_m2_min: 0.0820
+  stefan_boltzmann_mj_k4_m2_day: 4.903e-9
+  krs_interior: 0.16             # only used by the Hargreaves cross-check
+  soil_heat_flux_daily_mj_m2: 0.0 # FAO-56 sets G ~ 0 for daily time steps
+  wind_measurement_height_m: 2.0  # NASA POWER WS2M is already at 2 m: no
+                                  # logarithmic height correction is applied
+  clear_sky_turbidity_a: 0.75     # Rso = (a + b*z) * Ra
+  clear_sky_turbidity_b: 2.0e-5

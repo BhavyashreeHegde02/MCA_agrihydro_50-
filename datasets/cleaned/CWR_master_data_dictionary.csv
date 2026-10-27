@@ -1,0 +1,25 @@
+Feature,Category,Scientific_Description
+date,Time,Daily observation date
+location,Spatial,Farm/district/location identifier
+crop,Crop,Crop being cultivated
+growth_stage,Agronomy,Crop developmental stage
+crop_age_days,Agronomy,Age of crop in days
+kc,Agronomy,Crop coefficient
+temperature,Weather,Air temperature
+humidity,Weather,Relative humidity
+wind_speed,Weather,Wind speed
+solar_radiation,Weather,Solar radiation
+rainfall,Weather,Rainfall
+soil_type,Soil,Soil classification
+soil_moisture,Soil,Soil moisture information
+field_area_ha,Farm,Farm area in hectares
+irrigation_method,Irrigation,Drip/basin/spray etc.
+et0,Physics,Reference evapotranspiration
+kc_dynamic,Physics,Growth-stage-adjusted Kc
+etc,Physics,Crop evapotranspiration
+effective_rainfall,Physics,Usable rainfall contribution
+cwr_baseline,Physics,FAO/reference crop water requirement
+ml_cwr_target,ML Target,Research prediction target
+uncertainty_lower,Uncertainty,Lower prediction bound
+uncertainty_upper,Uncertainty,Upper prediction bound
+irrigation_requirement,Decision,Water required after rainfall/soil balance

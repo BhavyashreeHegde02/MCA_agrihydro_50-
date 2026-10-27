@@ -1,0 +1,25 @@
+Master_Feature,Source_Dataset,Source_Column_or_Basis,Source_Type,Status
+date,Climate_Data_cleaned.csv,datetime,Direct,Available
+location,Not yet established,—,Requires spatial linkage,Needs resolution
+crop,crop_water_data_cleaned.csv / Crop_Calender_cleaned.csv,crop_type / Crop,Direct/reference,Available
+growth_stage,crop_water_data_cleaned.csv / Karnataka_Crop_Growth_Stage_Reference_cleaned.csv,growth_stage / growth stage,Direct/reference,Available
+crop_age_days,crop_water_data_cleaned.csv,crop_age_days,Direct,Available
+kc,Karnataka_Crop_Growth_Stage_Reference_cleaned.csv / Crop_Calender_cleaned.csv,Kc reference / Kc (Crop Coefficient),Reference,Available with gaps
+temperature,Climate_Data_cleaned.csv,T2M,Direct,Available
+humidity,Climate_Data_cleaned.csv,RH2M,Direct,Available
+wind_speed,Climate_Data_cleaned.csv,WS2M,Direct,Available
+solar_radiation,Climate_Data_cleaned.csv,ALLSKY_SFC_SW_DWN,Direct,Available with 1 missing
+rainfall,Climate_Data_cleaned.csv,PRECTOTCORR,Direct,Available
+soil_type,Soil_data_cleaned.csv / crop_water_data_cleaned.csv,Soil type / soil_type,Direct/supporting,Available
+soil_moisture,crop_water_data_cleaned.csv,soil_moisture_pct,Direct,Available
+field_area_ha,crop_water_data_cleaned.csv,field_area_ha,Direct,Available
+irrigation_method,crop_water_data_cleaned.csv,irrigation_method,Direct,Available
+et0,Derived from weather,T2M/RH2M/WS2M/solar/radiation,Derived,To calculate
+kc_dynamic,Karnataka growth reference + crop age/GDD,Kc + growth stage,Derived,To calculate
+etc,Derived,ET0 × Kc,Derived,To calculate
+effective_rainfall,Derived/reference,Rainfall,Derived,To calculate
+cwr_baseline,Derived,ETc + agronomic assumptions,Derived,To calculate
+ml_cwr_target,Not independently observed yet,—,Research target,Needs decision
+uncertainty_lower,ML model output,—,Model-derived,Future stage
+uncertainty_upper,ML model output,—,Model-derived,Future stage
+irrigation_requirement,Derived,CWR + rainfall + soil balance + efficiency,Derived,Future stage

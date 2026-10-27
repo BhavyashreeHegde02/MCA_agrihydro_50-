@@ -1,0 +1,14 @@
+Crop,Growth Stage,Stage Description,Indicative Duration / Timing,Kc Reference,Kc Type,Evidence Source
+Paddy (Rice),Initial / Establishment,Transplanting/establishment and early canopy development,Reference window; verify locally,Wet paddy Kc_ini = 1.05–1.10; local Hemavathy study uses 1.10,Kc_ini,Thirumalesha et al. (2026) + FAO-56
+Paddy (Rice),Development / Tillering,Tillering and rapid vegetative development,≈14–34 DAT overlaps cited phenology,Kc curve from initial toward mid-season,Interpolated,FAO-56 + Indian rice study
+Paddy (Rice),Mid-Season / Flowering,Panicle initiation through flowering/full canopy,≈27–65 DAT in cited Indian field study,Wet paddy Kc_mid = 1.20,Kc_mid,Thirumalesha et al. (2026)
+Paddy (Rice),Late-Season / Maturity,Physiological maturity and senescence,≈97–101 DAT to maturity,Wet paddy Kc_end = 1.05,Kc_end,Thirumalesha et al. (2026) + FAO-56
+Paddy (Rice),Harvest,Harvest/end of crop cycle,≈112–113 DAT in cited Indian field study,Terminal reference; harvest timing is variety-specific,Terminal,Indian rice study
+Finger Millet (Ragi),Initial / Establishment,Germination and establishment,Beginning of vegetative phase,Local Hemavathy study Kc_ini = 0.30,Kc_ini,Thirumalesha et al. (2026)
+Finger Millet (Ragi),Development / Vegetative,Vegetative growth and canopy expansion,≈0–6 weeks after sowing,Interpolate from Kc_ini toward Kc_mid,Interpolated,Thirumalesha et al. (2026) + Indian ragi research
+Finger Millet (Ragi),Mid-Season / Flowering,Flowering and peak crop development,≈7–9 weeks after sowing,Local Kc_mid = 1.00; Bangalore study peak ≈1.02 on day 66,Kc_mid / peak,Thirumalesha et al. (2026); IMD MAUSAM
+Finger Millet (Ragi),Late-Season / Grain Development & Maturity,Grain development and maturation,Grain development ≈10–12 WAS; maturity ≈13–14 WAS,Local Kc_end = 0.30,Kc_end,Thirumalesha et al. (2026) + Indian ragi research
+Maize,Initial / Establishment,Emergence and early establishment,20 days (FAO indicative),Local Kc_ini = 0.30,Kc_ini,FAO-56 + Thirumalesha et al. (2026)
+Maize,Development / Vegetative,Rapid leaf and canopy development,35 days (FAO indicative),Kc increases from initial toward mid-season,Interpolated,FAO-56 + Thirumalesha et al. (2026)
+Maize,Mid-Season / Flowering & Grain Development,"Full canopy, flowering and peak water demand",40 days (FAO indicative),Local Kc_mid = 1.20; FAO typical = 1.15,Kc_mid,FAO-56 + Thirumalesha et al. (2026)
+Maize,Late-Season / Maturity,Grain filling and maturity,30 days (FAO indicative),Local Kc_end = 0.35; FAO typical = 0.70,Kc_end,FAO-56 + Thirumalesha et al. (2026)
